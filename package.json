@@ -16,6 +16,7 @@
   "build": {
     "appId": "com.alo.app",
     "productName": "ASCII Life OS",
+    "artifactName": "ASCII-Life-OS-${version}-${arch}.${ext}",
     "directories": {
       "output": "release"
     },
@@ -35,7 +36,7 @@
     },
     "publish": {
       "provider": "github",
-      "releaseType": "draft"
+      "releaseType": "release"
     }
   },
   "dependencies": {
