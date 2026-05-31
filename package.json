@@ -23,6 +23,17 @@
     ],
     "win": {
       "target": "portable"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.productivity"
+    },
+    "publish": {
+      "provider": "github",
+      "releaseType": "draft"
     }
   },
   "dependencies": {
