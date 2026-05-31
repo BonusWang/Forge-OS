@@ -5,7 +5,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  closestCorners,
+  closestCenter,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import TaskColumn from './TaskColumn';
@@ -44,6 +44,8 @@ const TaskBoard: React.FC = () => {
       },
     })
   );
+
+
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -117,7 +119,7 @@ const TaskBoard: React.FC = () => {
   const isCurrentWeek = weekStart === getWeekStart();
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <div style={{ marginBottom: 'var(--space-4)' }}>
         <div
           style={{

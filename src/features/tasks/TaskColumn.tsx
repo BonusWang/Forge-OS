@@ -88,7 +88,7 @@ const TaskColumn: React.FC<TaskColumnProps> = ({ date, column, tasks, title, dat
         style={{
           flex: 1,
           padding: 'var(--space-2) var(--space-3)',
-          minHeight: '80px',
+          minHeight: '200px',
           backgroundColor: isOver ? 'var(--bg-tertiary)' : 'transparent',
           transition: 'background-color var(--duration-instant)',
         }}
