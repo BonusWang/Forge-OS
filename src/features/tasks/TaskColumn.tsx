@@ -133,10 +133,11 @@ const TaskColumn: React.FC<TaskColumnProps> = ({ date, column, tasks, title, dat
               }}
             />
             {abilities.length > 0 && (
-              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
                 <select
                   value={selectedAbilityId}
                   onChange={(e) => setSelectedAbilityId(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   className="font-caption"
                   style={{
                     flex: 1,
@@ -159,6 +160,7 @@ const TaskColumn: React.FC<TaskColumnProps> = ({ date, column, tasks, title, dat
                     type="number"
                     value={abilityPoints}
                     onChange={(e) => setAbilityPoints(Number(e.target.value))}
+                    onKeyDown={handleKeyDown}
                     placeholder="分值"
                     className="font-caption"
                     style={{
@@ -171,6 +173,21 @@ const TaskColumn: React.FC<TaskColumnProps> = ({ date, column, tasks, title, dat
                     }}
                   />
                 )}
+                <button
+                  onClick={handleAdd}
+                  className="font-caption"
+                  style={{
+                    background: 'var(--bg-tertiary)',
+                    border: '1px solid var(--accent-gold)',
+                    color: 'var(--accent-gold)',
+                    fontFamily: 'var(--font-mono)',
+                    padding: 'var(--space-1) var(--space-2)',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  确认
+                </button>
               </div>
             )}
           </div>
