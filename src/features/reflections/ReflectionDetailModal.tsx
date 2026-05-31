@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Reflection } from '../../types';
 import ReflectionForm from './ReflectionForm';
+import { useAppStore } from '../../store/useAppStore';
 
 interface ReflectionDetailModalProps {
   reflection: Reflection | null;
@@ -12,8 +13,11 @@ const ReflectionDetailModal: React.FC<ReflectionDetailModalProps> = ({
   onClose,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const reflectionTemplates = useAppStore((s) => s.reflectionTemplates);
 
   if (!reflection) return null;
+
+  const template = reflectionTemplates.find((t) => t.id === reflection.templateId);
 
   return (
     <div
@@ -77,26 +81,25 @@ const ReflectionDetailModal: React.FC<ReflectionDetailModalProps> = ({
           />
         ) : (
           <div>
-            <div style={{ marginBottom: 'var(--space-3)' }}>
-              <div className="font-caption" style={{ color: 'var(--text-secondary)' }}>最大障碍:</div>
-              <div className="font-body">{reflection.answers.obstacle || '—'}</div>
-            </div>
-            <div style={{ marginBottom: 'var(--space-3)' }}>
-              <div className="font-caption" style={{ color: 'var(--text-secondary)' }}>解决方法:</div>
-              <div className="font-body">{reflection.answers.solution || '—'}</div>
-            </div>
-            <div style={{ marginBottom: 'var(--space-3)' }}>
-              <div className="font-caption" style={{ color: 'var(--text-secondary)' }}>有效/无效:</div>
-              <div className="font-body">{reflection.answers.effective || '—'}</div>
-            </div>
-            <div style={{ marginBottom: 'var(--space-3)' }}>
-              <div className="font-caption" style={{ color: 'var(--text-secondary)' }}>明天调整:</div>
-              <div className="font-body">{reflection.answers.adjustment || '—'}</div>
-            </div>
-            <div style={{ marginBottom: 'var(--space-3)' }}>
-              <div className="font-caption" style={{ color: 'var(--text-secondary)' }}>掌控感 (1-10):</div>
-              <div className="font-body">{reflection.answers.control}</div>
-            </div>
+            {template && (
+              <div className="font-caption" style={{ color: 'var(--text-muted)', marginBottom: 'var(--space-3)' }}>
+                模板: {template.name}
+              </div>
+            )}
+
+            {template?.questions.map((q) => (
+              <div key={q.id} style={{ marginBottom: 'var(--space-3)' }}>
+                <div className="font-caption" style={{ color: 'var(--text-secondary)' }}>
+                  {q.label}:
+                </div>
+                <div className="font-body">
+                  {reflection.answers[q.id] !== undefined
+                    ? String(reflection.answers[q.id])
+                    : '—'}
+                </div>
+              </div>
+            ))}
+
             <div style={{ marginBottom: 'var(--space-3)' }}>
               <div className="font-caption" style={{ color: 'var(--text-secondary)' }}>标签:</div>
               <div style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap' }}>

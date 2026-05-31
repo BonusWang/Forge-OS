@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
+import { aloCopy } from '../../copy/alo-copy';
 import { generateTags } from '../../hooks/useReflectionTags';
 import type { Reflection } from '../../types';
 
@@ -14,26 +15,63 @@ const ReflectionForm: React.FC<ReflectionFormProps> = ({
   existingReflection,
   onSave,
 }) => {
-  const { saveReflection } = useAppStore();
+  const { saveReflection, reflectionTemplates, getDefaultTemplate, getMoodByDate, incrementScore } = useAppStore();
 
-  const [answers, setAnswers] = useState({
-    obstacle: existingReflection?.answers.obstacle || '',
-    solution: existingReflection?.answers.solution || '',
-    effective: existingReflection?.answers.effective || '',
-    adjustment: existingReflection?.answers.adjustment || '',
-    control: existingReflection?.answers.control || 5,
-  });
+  const defaultTemplate = getDefaultTemplate();
+  const templateId = existingReflection?.templateId ?? defaultTemplate?.id ?? '';
+  const template = reflectionTemplates.find((t) => t.id === templateId) || defaultTemplate;
+
+  const todayMood = getMoodByDate(date);
+
+  const [answers, setAnswers] = useState<Record<string, string | number>>({});
+
+  useEffect(() => {
+    if (existingReflection) {
+      setAnswers({ ...existingReflection.answers });
+    } else if (template) {
+      const initial: Record<string, string | number> = {};
+      template.questions.forEach((q) => {
+        if (q.type === 'number') {
+          initial[q.id] = q.min ?? 1;
+        } else {
+          initial[q.id] = '';
+        }
+      });
+      setAnswers(initial);
+    }
+  }, [existingReflection, template]);
 
   const handleSubmit = () => {
-    if (!answers.obstacle.trim()) return;
+    if (!template) return;
+    // 检查必填项
+    const missingRequired = template.questions.some(
+      (q) => q.required && !String(answers[q.id] ?? '').trim()
+    );
+    if (missingRequired) return;
 
-    const tags = generateTags('obstacle-breakthrough', answers);
+    const tags = generateTags(template, answers);
 
     saveReflection({
       date,
-      template: 'obstacle-breakthrough',
+      templateId: template.id,
       answers,
       tags,
+    });
+
+    // 能力联动：给关联能力的非空答案加分
+    template.questions.forEach((q) => {
+      if (!q.abilityLink) return;
+      const answer = answers[q.id];
+      if (answer === undefined || answer === '' || answer === null) return;
+
+      let points = 1;
+      if (q.type === 'number' && q.max) {
+        const val = Number(answer);
+        if (!isNaN(val)) {
+          points = Math.max(1, Math.round((val / q.max) * 5));
+        }
+      }
+      incrementScore(q.abilityLink, points);
     });
 
     if (onSave) onSave();
@@ -63,48 +101,121 @@ const ReflectionForm: React.FC<ReflectionFormProps> = ({
     textTransform: 'uppercase',
   };
 
-  const questions = [
-    { key: 'obstacle' as const, label: '最大障碍' },
-    { key: 'solution' as const, label: '解决方法' },
-    { key: 'effective' as const, label: '有效/无效' },
-    { key: 'adjustment' as const, label: '明天调整' },
-  ];
+  if (!template) {
+    return (
+      <div className="font-body" style={{ color: 'var(--text-secondary)' }}>
+        {aloCopy.emptyStates.reflectionTemplate}
+      </div>
+    );
+  }
 
   return (
     <div>
-      {questions.map((q) => (
-        <div key={q.key}>
-          <label className="font-caption" style={labelStyle}>{q.label}:</label>
-          <input
-            value={answers[q.key]}
-            onChange={(e) => setAnswers((prev) => ({ ...prev, [q.key]: e.target.value }))}
-            placeholder="..."
-            className="font-body"
-            style={inputStyle}
-            onFocus={(e) => {
-              e.currentTarget.style.borderBottomColor = 'var(--accent-gold)';
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderBottomColor = 'var(--border-primary)';
-            }}
-          />
+      {/* Mood summary if available */}
+      {todayMood && (
+        <div
+          style={{
+            marginBottom: 'var(--space-3)',
+            padding: 'var(--space-2)',
+            backgroundColor: 'var(--bg-tertiary)',
+            border: '1px solid var(--border-primary)',
+          }}
+        >
+          <span className="font-caption" style={{ color: 'var(--text-muted)' }}>
+            今日情绪: {' '}
+          </span>
+          <span className="font-body" style={{ color: 'var(--accent-gold)' }}>
+            {todayMood.mood}/10
+          </span>
+          <span className="font-caption" style={{ color: 'var(--text-muted)', marginLeft: 'var(--space-2)' }}>
+            能量: {' '}
+          </span>
+          <span className="font-body" style={{ color: 'var(--accent-success)' }}>
+            {todayMood.energy}/10
+          </span>
+          {todayMood.note && (
+            <span className="font-caption" style={{ color: 'var(--text-secondary)', marginLeft: 'var(--space-2)' }}>
+              — {todayMood.note}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Template indicator */}
+      <div
+        className="font-caption"
+        style={{ color: 'var(--text-muted)', marginBottom: 'var(--space-3)' }}
+      >
+        使用模板: {template.name}
+      </div>
+
+      {template.questions.map((q) => (
+        <div key={q.id}>
+          <label className="font-caption" style={labelStyle}>
+            {q.label}
+            {q.required ? ' *' : ''}
+            {q.abilityLink ? ' (能力加分)' : ''}
+          </label>
+
+          {q.type === 'text' && (
+            <input
+              value={String(answers[q.id] ?? '')}
+              onChange={(e) =>
+                setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+              }
+              placeholder="..."
+              className="font-body"
+              style={inputStyle}
+              onFocus={(e) => {
+                e.currentTarget.style.borderBottomColor = 'var(--accent-gold)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderBottomColor = 'var(--border-primary)';
+              }}
+            />
+          )}
+
+          {q.type === 'number' && (
+            <input
+              type="number"
+              min={q.min}
+              max={q.max}
+              value={Number(answers[q.id] ?? q.min ?? 1)}
+              onChange={(e) =>
+                setAnswers((prev) => ({
+                  ...prev,
+                  [q.id]: Number(e.target.value) || 0,
+                }))
+              }
+              className="font-body"
+              style={{ ...inputStyle, width: '80px' }}
+            />
+          )}
+
+          {q.type === 'select' && q.options && (
+            <select
+              value={String(answers[q.id] ?? '')}
+              onChange={(e) =>
+                setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+              }
+              className="font-body"
+              style={{
+                ...inputStyle,
+                background: 'var(--bg-primary)',
+                border: '1px solid var(--border-primary)',
+                padding: 'var(--space-1) var(--space-2)',
+              }}
+            >
+              <option value="">-- 请选择 --</option>
+              {q.options.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       ))}
-
-      <div>
-        <label className="font-caption" style={labelStyle}>掌控感 (1-10):</label>
-        <input
-          type="number"
-          min={1}
-          max={10}
-          value={answers.control}
-          onChange={(e) =>
-            setAnswers((prev) => ({ ...prev, control: parseInt(e.target.value) || 5 }))
-          }
-          className="font-body"
-          style={{ ...inputStyle, width: '60px' }}
-        />
-      </div>
 
       <button
         onClick={handleSubmit}

@@ -115,7 +115,7 @@ const OKRPanel: React.FC = () => {
             style={{ width: '120px', height: 'auto', opacity: 0.7, marginBottom: 'var(--space-3)' }}
           />
           <div className="font-body" style={{ color: 'var(--text-muted)' }}>
-            {aloCopy.emptyStates.weekBoardColumn}
+            {aloCopy.emptyStates.okr}
           </div>
         </div>
       )}
@@ -214,7 +214,7 @@ const OKRPanel: React.FC = () => {
             <div style={{ padding: 'var(--space-1) var(--space-2)' }}>
               {obj.keyResults.length === 0 && (
                 <div className="font-caption" style={{ color: 'var(--text-muted)', padding: 'var(--space-1) 0' }}>
-                  暂无关键结果
+                  {aloCopy.emptyStates.keyResults}
                 </div>
               )}
               {obj.keyResults.map((kr) => (

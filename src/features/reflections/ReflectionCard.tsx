@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Reflection } from '../../types';
+import { useAppStore } from '../../store/useAppStore';
 
 interface ReflectionCardProps {
   reflection: Reflection;
@@ -7,7 +8,23 @@ interface ReflectionCardProps {
 }
 
 const ReflectionCard: React.FC<ReflectionCardProps> = ({ reflection, onClick }) => {
-  const stars = '★'.repeat(Math.round(reflection.answers.control / 2)) + '☆'.repeat(5 - Math.round(reflection.answers.control / 2));
+  const reflectionTemplates = useAppStore((s) => s.reflectionTemplates);
+  const template = reflectionTemplates.find((t) => t.id === reflection.templateId);
+
+  // Find a numeric question to display as "stars" (prefer control-related)
+  const numericQuestion = template?.questions.find((q) => q.type === 'number');
+  const numericValue = numericQuestion
+    ? Number(reflection.answers[numericQuestion.id] ?? 0)
+    : 0;
+  const stars = numericQuestion
+    ? '★'.repeat(Math.round(numericValue / 2)) + '☆'.repeat(5 - Math.round(numericValue / 2))
+    : '';
+
+  // Find first text answer for preview
+  const textQuestion = template?.questions.find((q) => q.type === 'text');
+  const preview = textQuestion
+    ? String(reflection.answers[textQuestion.id] ?? '')
+    : '';
 
   return (
     <div
@@ -33,17 +50,25 @@ const ReflectionCard: React.FC<ReflectionCardProps> = ({ reflection, onClick }) 
         <span className="font-h3" style={{ color: 'var(--text-primary)' }}>
           {reflection.date}
         </span>
-        <span style={{ color: 'var(--accent-gold)' }}>{stars}</span>
+        {stars && <span style={{ color: 'var(--accent-gold)' }}>{stars}</span>}
       </div>
 
-      <div style={{ marginBottom: 'var(--space-2)' }}>
-        <div className="font-caption" style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-1)' }}>
-          最大障碍:
+      {template && (
+        <div className="font-caption" style={{ color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>
+          {template.name}
         </div>
-        <div className="font-body" style={{ color: 'var(--text-primary)' }}>
-          {reflection.answers.obstacle || '—'}
+      )}
+
+      {preview && (
+        <div style={{ marginBottom: 'var(--space-2)' }}>
+          <div className="font-caption" style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-1)' }}>
+            {textQuestion?.label}:
+          </div>
+          <div className="font-body" style={{ color: 'var(--text-primary)' }}>
+            {preview || '—'}
+          </div>
         </div>
-      </div>
+      )}
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-1)' }}>
         {reflection.tags.map((tag) => (

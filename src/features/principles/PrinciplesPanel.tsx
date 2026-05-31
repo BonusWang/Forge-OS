@@ -72,7 +72,7 @@ const PrinciplesPanel: React.FC = () => {
                 e.currentTarget.style.color = 'var(--text-secondary)';
               }}
             >
-              [  保存  ]
+              [ {aloCopy.actions.save} ]
             </button>
             <button
               onClick={() => setIsEditing(false)}
@@ -96,7 +96,7 @@ const PrinciplesPanel: React.FC = () => {
                 e.currentTarget.style.color = 'var(--text-secondary)';
               }}
             >
-              [  取消  ]
+              [ {aloCopy.actions.cancel} ]
             </button>
           </div>
         </div>
@@ -117,7 +117,7 @@ const PrinciplesPanel: React.FC = () => {
                 style={{ width: '80px', height: 'auto', opacity: 0.5, marginBottom: 'var(--space-2)' }}
               />
               <div className="font-body" style={{ color: 'var(--text-muted)' }}>
-                {aloCopy.emptyStates.weekBoardColumn}
+                {aloCopy.emptyStates.inbox}
               </div>
             </div>
           )}
@@ -141,7 +141,7 @@ const PrinciplesPanel: React.FC = () => {
               e.currentTarget.style.color = 'var(--text-muted)';
             }}
           >
-            [✎ 编辑原则]
+            [{aloCopy.actions.edit}原则]
           </button>
         </div>
       )}

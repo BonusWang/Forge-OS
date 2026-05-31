@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import AsciiBox from '../../components/AsciiBox';
+import { aloCopy } from '../../copy/alo-copy';
 import AsciiProgress from '../../components/AsciiProgress';
 
 const AbilityManagementPanel: React.FC = () => {
@@ -49,7 +50,7 @@ const AbilityManagementPanel: React.FC = () => {
     <AsciiBox title="ABILITY TRAINING">
       {abilities.length === 0 && (
         <div className="font-body" style={{ color: 'var(--text-muted)', marginBottom: 'var(--space-2)' }}>
-          暂无能力，添加一个开始培养吧
+          {aloCopy.emptyStates.abilityManagement}
         </div>
       )}
 
@@ -193,7 +194,7 @@ const AbilityManagementPanel: React.FC = () => {
                 </div>
               ))}
               {ability.tasks.length === 0 && (
-                <div className="font-caption" style={{ color: 'var(--text-muted)' }}>暂无子任务</div>
+                <div className="font-caption" style={{ color: 'var(--text-muted)' }}>{aloCopy.emptyStates.keyResults}</div>
               )}
               <div style={{ display: 'flex', gap: 'var(--space-1)', marginTop: 'var(--space-1)' }}>
                 <input

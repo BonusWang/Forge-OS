@@ -8,6 +8,14 @@ import { createEntertainmentSlice, type EntertainmentSlice } from './slices/ente
 import { createConfigSlice, type ConfigSlice } from './slices/configSlice';
 import { createCalendarSlice, type CalendarSlice } from './slices/calendarSlice';
 import { createOKRSlice, type OKRSlice } from './slices/okrSlice';
+import { createModuleSlice, type ModuleSlice } from './slices/moduleSlice';
+import { createHabitSlice, type HabitSlice } from './slices/habitSlice';
+import { createMoodSlice, type MoodSlice } from './slices/moodSlice';
+import { createTimeBlockSlice, type TimeBlockSlice } from './slices/timeBlockSlice';
+import { createInspirationSlice, type InspirationSlice } from './slices/inspirationSlice';
+import { createReflectionTemplateSlice, type ReflectionTemplateSlice } from './slices/reflectionTemplateSlice';
+import { migrateAllReflections } from '../utils/migrateReflectionData';
+import { migrateAppData, CURRENT_APP_VERSION } from '../utils/migrateAppData';
 import { electronStorage } from '../utils/electronStorage';
 import type { AppState } from '../types';
 
@@ -18,7 +26,15 @@ export type AppStore = TaskSlice &
   ReflectionSlice &
   EntertainmentSlice &
   ConfigSlice &
-  OKRSlice;
+  OKRSlice &
+  ModuleSlice &
+  HabitSlice &
+  MoodSlice &
+  TimeBlockSlice &
+  InspirationSlice &
+  ReflectionTemplateSlice & {
+    __version: string;
+  };
 
 export const useAppStore = create<AppStore>()(
   persist<AppStore, [], [], AppState>(
@@ -31,6 +47,13 @@ export const useAppStore = create<AppStore>()(
       ...createEntertainmentSlice(...args),
       ...createConfigSlice(...args),
       ...createOKRSlice(...args),
+      ...createModuleSlice(...args),
+      ...createHabitSlice(...args),
+      ...createMoodSlice(...args),
+      ...createTimeBlockSlice(...args),
+      ...createInspirationSlice(...args),
+      ...createReflectionTemplateSlice(...args),
+      __version: CURRENT_APP_VERSION,
     }),
     {
       name: 'alo-storage',
@@ -45,7 +68,29 @@ export const useAppStore = create<AppStore>()(
         objectives: state.objectives,
         inboxItems: state.inboxItems,
         config: state.config,
+        enabledModules: state.enabledModules,
+        habits: state.habits,
+        moods: state.moods,
+        timeBlocks: state.timeBlocks,
+        inspirations: state.inspirations,
+        reflectionTemplates: state.reflectionTemplates,
+        __version: state.__version,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+
+        // Migrate old reflection data format
+        const result = migrateAllReflections(
+          state.reflections || [],
+          state.reflectionTemplates || []
+        );
+        state.reflections = result.reflections;
+        state.reflectionTemplates = result.templates;
+
+        // Migrate app data version
+        const migrated = migrateAppData(state, CURRENT_APP_VERSION);
+        Object.assign(state, migrated);
+      },
     }
   )
 );

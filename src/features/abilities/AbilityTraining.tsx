@@ -266,7 +266,7 @@ const AbilityTraining: React.FC = () => {
                 );
               })}
               {ability.tasks.length === 0 && (
-                <div className="font-caption" style={{ color: 'var(--text-muted)' }}>暂无子任务</div>
+                <div className="font-caption" style={{ color: 'var(--text-muted)' }}>{aloCopy.emptyStates.keyResults}</div>
               )}
               <div style={{ display: 'flex', gap: 'var(--space-1)', marginTop: 'var(--space-1)' }}>
                 <input

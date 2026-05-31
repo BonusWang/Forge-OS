@@ -17,7 +17,7 @@ interface MiniCalendarProps {
 }
 
 const MiniCalendar: React.FC<MiniCalendarProps> = ({ year, month }) => {
-  const { reflections, calendarEvents, tasks, addCalendarEvent, deleteCalendarEvent, addTask } = useAppStore();
+  const { reflections, calendarEvents, tasks, addCalendarEvent, deleteCalendarEvent, addTask, habits, toggleHabitCompletion } = useAppStore();
 
   const now = new Date();
   const currentYear = year ?? now.getFullYear();
@@ -63,12 +63,35 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ year, month }) => {
     return tasks.filter((t) => t.date === dateStr);
   };
 
+  const getHabitsForDate = (dateStr: string) => {
+    return habits.map((h) => ({
+      habit: h,
+      completed: h.completions[dateStr] ?? false,
+    }));
+  };
+
   const handleDayClick = (dateStr: string, e: React.MouseEvent) => {
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setPopupPosition({
-      top: rect.bottom + window.scrollY + 4,
-      left: Math.min(rect.left + window.scrollX, window.innerWidth - 280),
-    });
+    const popupHeight = 340; // maxHeight of popup
+    const popupWidth = 260;
+    const gap = 4;
+
+    let top = rect.bottom + window.scrollY + gap;
+    // If popup would overflow bottom of viewport, show it above the cell instead
+    if (rect.bottom + popupHeight + gap > window.innerHeight) {
+      top = rect.top + window.scrollY - popupHeight - gap;
+    }
+
+    let left = rect.left + window.scrollX;
+    // Keep popup within horizontal viewport bounds
+    if (left + popupWidth > window.innerWidth) {
+      left = window.innerWidth - popupWidth - gap;
+    }
+    if (left < gap) {
+      left = gap;
+    }
+
+    setPopupPosition({ top, left });
     setPopupDate(dateStr);
     setNewEventContent('');
   };
@@ -96,6 +119,7 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ year, month }) => {
 
   const popupEvents = popupDate ? getEventsForDate(popupDate) : [];
   const popupTasks = popupDate ? getTasksForDate(popupDate) : [];
+  const popupHabits = popupDate ? getHabitsForDate(popupDate) : [];
 
   return (
     <div style={{ position: 'relative' }}>
@@ -133,6 +157,7 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ year, month }) => {
           const dateTasks = getTasksForDate(dateStr);
           const hasEvents = events.length > 0;
           const hasTasks = dateTasks.filter((t) => t.status === 'active').length > 0;
+          const hasHabits = habits.length > 0;
 
           let display = format(day, 'd');
           let color: string = 'var(--text-secondary)';
@@ -180,7 +205,7 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ year, month }) => {
               }}
             >
               {display}
-              {(hasEvents || hasTasks) && (
+              {(hasEvents || hasTasks || hasHabits) && (
                 <div
                   style={{
                     position: 'absolute',
@@ -213,6 +238,17 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ year, month }) => {
                       }}
                     />
                   )}
+                  {hasHabits && (
+                    <span
+                      style={{
+                        width: '5px',
+                        height: '5px',
+                        borderRadius: '0',
+                        backgroundColor: 'var(--text-secondary)',
+                        display: 'inline-block',
+                      }}
+                    />
+                  )}
                 </div>
               )}
             </div>
@@ -221,7 +257,7 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ year, month }) => {
       </div>
 
       <div className="font-caption" style={{ marginTop: 'var(--space-2)', color: 'var(--text-muted)' }}>
-        图例: ☑已写 ✗未写 <span style={{ display: 'inline-block', width: '5px', height: '5px', backgroundColor: 'var(--accent-gold)', verticalAlign: 'middle', marginLeft: '4px' }} />任务 <span style={{ display: 'inline-block', width: '5px', height: '5px', backgroundColor: 'var(--accent-success)', verticalAlign: 'middle', marginLeft: '4px' }} />事项
+        图例: ☑已写 ✗未写 <span style={{ display: 'inline-block', width: '5px', height: '5px', backgroundColor: 'var(--accent-gold)', verticalAlign: 'middle', marginLeft: '4px' }} />任务 <span style={{ display: 'inline-block', width: '5px', height: '5px', backgroundColor: 'var(--accent-success)', verticalAlign: 'middle', marginLeft: '4px' }} />事项 <span style={{ display: 'inline-block', width: '5px', height: '5px', backgroundColor: 'var(--text-secondary)', verticalAlign: 'middle', marginLeft: '4px' }} />习惯
       </div>
 
       {/* Popup */}
@@ -286,6 +322,52 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ year, month }) => {
                     }}
                   >
                     [x]
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Existing habits for this date */}
+          {popupHabits.length > 0 && (
+            <div style={{ marginBottom: 'var(--space-3)' }}>
+              <div className="font-caption" style={{ color: 'var(--text-muted)', marginBottom: 'var(--space-1)' }}>
+                习惯:
+              </div>
+              {popupHabits.map(({ habit, completed }) => (
+                <div
+                  key={habit.id}
+                  className="font-body"
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: 'var(--space-1) 0',
+                    borderBottom: '1px solid var(--border-primary)',
+                  }}
+                >
+                  <span
+                    style={{
+                      color: completed ? 'var(--accent-success)' : 'var(--text-primary)',
+                      textDecoration: completed ? 'line-through' : 'none',
+                      flex: 1,
+                    }}
+                  >
+                    {completed ? '☑' : '☐'} {habit.name}
+                  </span>
+                  <button
+                    onClick={() => popupDate && toggleHabitCompletion(habit.id, popupDate)}
+                    className="font-caption"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: completed ? 'var(--accent-danger)' : 'var(--accent-success)',
+                      cursor: 'pointer',
+                      fontFamily: 'var(--font-mono)',
+                      padding: '0 var(--space-1)',
+                    }}
+                  >
+                    {completed ? '[取消]' : '[打卡]'}
                   </button>
                 </div>
               ))}

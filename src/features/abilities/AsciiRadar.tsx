@@ -2,6 +2,7 @@ import React from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { useAsciiRadar } from '../../hooks/useAsciiRadar';
 import AsciiBox from '../../components/AsciiBox';
+import { aloCopy } from '../../copy/alo-copy';
 
 const AsciiRadar: React.FC = () => {
   const { abilities } = useAppStore();
@@ -11,7 +12,7 @@ const AsciiRadar: React.FC = () => {
     return (
       <AsciiBox title="ABILITY RADAR">
         <div className="font-body" style={{ color: 'var(--text-muted)' }}>
-          暂无能力数据，无法生成雷达图
+          {aloCopy.emptyStates.radar}
         </div>
       </AsciiBox>
     );

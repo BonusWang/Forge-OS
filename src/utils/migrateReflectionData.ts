@@ -1,0 +1,81 @@
+import type { Reflection, ReflectionTemplate } from '../types';
+import { DEFAULT_TEMPLATE } from '../store/slices/reflectionTemplateSlice';
+
+/**
+ * 检测并迁移旧格式的反思数据到新格式
+ * 旧格式: template: 'obstacle-breakthrough', answers: { obstacle, solution, effective, adjustment, control }
+ * 新格式: templateId: 'obstacle-breakthrough', answers: Record<string, string | number>
+ */
+export interface LegacyReflection {
+  id: string;
+  date: string;
+  template: 'obstacle-breakthrough';
+  answers: {
+    obstacle: string;
+    solution: string;
+    effective: string;
+    adjustment: string;
+    control: number;
+  };
+  tags: string[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export function isLegacyReflection(r: any): r is LegacyReflection {
+  return (
+    r &&
+    typeof r.template === 'string' &&
+    r.template === 'obstacle-breakthrough' &&
+    r.answers &&
+    typeof r.answers === 'object' &&
+    !Array.isArray(r.answers) &&
+    'obstacle' in r.answers
+  );
+}
+
+export function migrateReflection(
+  legacy: LegacyReflection
+): Reflection {
+  return {
+    id: legacy.id,
+    date: legacy.date,
+    templateId: legacy.template,
+    answers: {
+      'q-obstacle': legacy.answers.obstacle,
+      'q-solution': legacy.answers.solution,
+      'q-effective': legacy.answers.effective,
+      'q-adjustment': legacy.answers.adjustment,
+      'q-control': legacy.answers.control,
+    },
+    tags: legacy.tags,
+    createdAt: legacy.createdAt,
+    updatedAt: legacy.updatedAt,
+  };
+}
+
+export function migrateAllReflections(
+  reflections: any[],
+  templates: ReflectionTemplate[]
+): { reflections: Reflection[]; templates: ReflectionTemplate[] } {
+  const hasLegacy = reflections.some(isLegacyReflection);
+
+  if (!hasLegacy) {
+    return { reflections: reflections as Reflection[], templates };
+  }
+
+  // 确保默认模板存在
+  const hasDefaultTemplate = templates.some((t) => t.id === DEFAULT_TEMPLATE.id);
+  const nextTemplates = hasDefaultTemplate
+    ? templates
+    : [DEFAULT_TEMPLATE, ...templates];
+
+  const nextReflections = reflections.map((r) => {
+    if (isLegacyReflection(r)) {
+      return migrateReflection(r);
+    }
+    return r as Reflection;
+  });
+
+  return { reflections: nextReflections, templates: nextTemplates };
+}

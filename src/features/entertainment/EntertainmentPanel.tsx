@@ -75,7 +75,7 @@ const EntertainmentPanel: React.FC = () => {
             style={{ width: '80px', height: 'auto', opacity: 0.5, marginBottom: 'var(--space-2)' }}
           />
           <div className="font-body" style={{ color: 'var(--text-muted)' }}>
-            {aloCopy.emptyStates.inbox}
+            {aloCopy.emptyStates.entertainment}
           </div>
         </div>
       )}
@@ -89,7 +89,7 @@ const EntertainmentPanel: React.FC = () => {
           onBlur={() => {
             if (!newContent.trim()) setIsAdding(false);
           }}
-          placeholder="输入娱乐活动..."
+          placeholder="输入能让你暂时忘记人生无意义的活动..."
           className="font-body"
           style={{
             background: 'transparent',
@@ -125,7 +125,7 @@ const EntertainmentPanel: React.FC = () => {
             e.currentTarget.style.color = 'var(--text-muted)';
           }}
         >
-          [+ 添加娱乐]
+          [{aloCopy.actions.addEntertainment}]
         </button>
       )}
     </AsciiBox>

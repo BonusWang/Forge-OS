@@ -11,6 +11,7 @@ import { arrayMove } from '@dnd-kit/sortable';
 import TaskColumn from './TaskColumn';
 import OKRInboxColumn from '../okr/OKRInboxColumn';
 import { useAppStore } from '../../store/useAppStore';
+import { aloCopy } from '../../copy/alo-copy';
 import { format, addDays } from 'date-fns';
 import {
   getWeekStart,
@@ -148,7 +149,7 @@ const TaskBoard: React.FC = () => {
               e.currentTarget.style.borderColor = 'var(--border-primary)';
             }}
           >
-            &lt; 上一周
+            {aloCopy.actions.prevWeek}
           </button>
           <span className="font-h3" style={{ color: 'var(--accent-gold)' }}>
             {format(new Date(weekStart), 'yyyy年M月d日')} — {format(addDays(new Date(weekStart), 6), 'M月d日')}
@@ -174,7 +175,7 @@ const TaskBoard: React.FC = () => {
               e.currentTarget.style.borderColor = 'var(--border-primary)';
             }}
           >
-            下一周 &gt;
+            {aloCopy.actions.nextWeek}
           </button>
           {!isCurrentWeek && (
             <button
@@ -189,7 +190,7 @@ const TaskBoard: React.FC = () => {
                 padding: 'var(--space-1) var(--space-3)',
               }}
             >
-              本周
+              {aloCopy.actions.currentWeek}
             </button>
           )}
         </div>

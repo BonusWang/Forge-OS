@@ -22,13 +22,13 @@ const TodayProgress: React.FC = () => {
   return (
     <div>
       <div className="font-body" style={{ marginBottom: 'var(--space-2)' }}>
-        <span className="text-secondary">完成: </span>
+        <span className="text-secondary">{aloCopy.status.allComplete.includes('全部完成') ? '完成: ' : '完成: '}</span>
         <span style={{ color: 'var(--text-primary)' }}>
           {completedCount}/{totalCount}
         </span>
         {todayPoints > 0 && (
           <span className="font-caption" style={{ color: 'var(--accent-gold)', marginLeft: 'var(--space-4)' }}>
-            能力: +{todayPoints}pts
+            {aloCopy.status.abilityPoints}: +{todayPoints}pts
           </span>
         )}
       </div>
@@ -53,7 +53,7 @@ const TodayProgress: React.FC = () => {
             style={{ width: '120px', height: 'auto', opacity: 0.7, marginBottom: 'var(--space-3)' }}
           />
           <div className="font-body" style={{ color: 'var(--text-muted)' }}>
-            {aloCopy.emptyStates.weekBoardColumn}
+            {aloCopy.status.noTasksToday}
           </div>
         </div>
       )}

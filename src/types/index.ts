@@ -42,20 +42,41 @@ export interface Ability {
   tasks: AbilityTask[];
 }
 
+export interface ReflectionQuestion {
+  id: string;
+  label: string;
+  type: 'text' | 'number' | 'select';
+  options?: string[];
+  min?: number;
+  max?: number;
+  required: boolean;
+  abilityLink?: string;
+}
+
+export interface ReflectionTemplate {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  questions: ReflectionQuestion[];
+}
+
 export interface Reflection {
   id: string;
   date: string;
-  template: 'obstacle-breakthrough';
-  answers: {
-    obstacle: string;
-    solution: string;
-    effective: string;
-    adjustment: string;
-    control: number;
-  };
+  templateId: string;
+  answers: Record<string, string | number>;
   tags: string[];
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface Inspiration {
+  id: string;
+  content: string;
+  source?: string;
+  tags: string[];
+  createdAt: string;
+  convertedToTaskId?: string;
 }
 
 export interface Entertainment {
@@ -95,6 +116,64 @@ export interface AppConfig {
   theme: 'dark' | 'light';
 }
 
+// ─── Module System ───
+
+export type ModuleId =
+  | 'principles'
+  | 'calendar'
+  | 'entertainment'
+  | 'habits'
+  | 'mood'
+  | 'timeBlocks'
+  | 'inspiration';
+
+export interface ModuleMeta {
+  id: ModuleId;
+  name: string;
+  description: string;
+  defaultEnabled: boolean;
+  defaultZone: 'main' | 'side';
+  icon: string;
+}
+
+export interface ModuleConfig {
+  enabledModules: ModuleId[];
+}
+
+export type HabitColor = 'gold' | 'green' | 'blue' | 'red' | 'purple';
+
+export type HabitFrequency = 'daily' | 'weekdays' | 'weekends' | 'weekly';
+
+export interface Habit {
+  id: string;
+  name: string;
+  color: HabitColor;
+  frequency: HabitFrequency;
+  targetDays: number;
+  completions: Record<string, boolean>;
+  createdAt: string;
+}
+
+export interface MoodEntry {
+  id: string;
+  date: string;
+  mood: number;
+  energy: number;
+  note: string;
+  createdAt: string;
+}
+
+export interface TimeBlock {
+  id: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  label: string;
+  taskId?: string;
+  color?: string;
+  completed: boolean;
+}
+
 export interface AppState {
   tasks: Task[];
   calendarEvents: CalendarEvent[];
@@ -105,6 +184,8 @@ export interface AppState {
   objectives: Objective[];
   inboxItems: InboxItem[];
   config: AppConfig;
+  enabledModules: ModuleId[];
+  __version: string;
 }
 
 // Electron IPC API exposed via contextBridge in preload.cjs
@@ -113,6 +194,9 @@ declare global {
     electronAPI?: {
       loadDataSync: () => Record<string, string> | null;
       saveData: (data: Record<string, string>) => Promise<boolean>;
+      getAppVersion: () => string;
+      saveRollback: (data: Record<string, unknown>) => Promise<boolean>;
+      onBeforeQuit: (callback: () => void) => void;
     };
   }
 }
