@@ -8,6 +8,13 @@
 <!-- [![Release](https://img.shields.io/github/v/release/maverickgao8848/matrix-life-os)](https://github.com/maverickgao8848/matrix-life-os/releases) -->
 <!-- [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-blue)]() -->
 <!-- [![License](https://img.shields.io/github/license/maverickgao8848/matrix-life-os)](LICENSE) -->
+---
+<img width="2713" height="1572" alt="image" src="https://github.com/user-attachments/assets/03f83d9d-9d28-40b6-9741-59136970861e" />
+
+<img width="2666" height="1518" alt="image" src="https://github.com/user-attachments/assets/6bac0af2-317b-4d69-a599-ec4529cb67da" />
+
+<img width="2717" height="1463" alt="image" src="https://github.com/user-attachments/assets/1f302fa5-0eca-4b0c-9835-2f55069a4c2a" />
+
 
 ---
 
