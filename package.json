@@ -1,7 +1,7 @@
 {
   "name": "ascii-life-os",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A personal life management system with ASCII art terminal-style UI",
   "author": "ASCII Life OS Contributors",
   "type": "module",
