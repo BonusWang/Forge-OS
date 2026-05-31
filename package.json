@@ -1,7 +1,9 @@
 {
-  "name": "matrix-app",
+  "name": "ascii-life-os",
   "private": true,
   "version": "0.1.0",
+  "description": "A personal life management system with ASCII art terminal-style UI",
+  "author": "ASCII Life OS Contributors",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
