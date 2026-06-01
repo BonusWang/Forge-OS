@@ -74,7 +74,7 @@ const DataBackupPanel: React.FC = () => {
   };
 
   return (
-    <AsciiBox title="DATA BACKUP">
+    <AsciiBox title="数据备份">
       <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
         <button
           onClick={handleExport}

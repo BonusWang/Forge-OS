@@ -40,7 +40,7 @@ export const aloCopy = {
   // ── Brand Slogans ──
   slogans: {
     primary: "在黑暗中，金箔是最谦卑的荣耀。",
-    secondary: "ASCII LIFE OS — 一个冷眼旁观你摆烂的室友。",
+    secondary: "Forge — Forge yourself —— 自己锻造自己。",
   },
 
   // ── Navigation Hover Titles ──

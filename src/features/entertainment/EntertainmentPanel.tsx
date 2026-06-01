@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import AsciiBox from '../../components/AsciiBox';
 import { aloCopy } from '../../copy/alo-copy';
+import { resources } from '../../utils/assets';
 
 const EntertainmentPanel: React.FC = () => {
   const [isAdding, setIsAdding] = useState(false);
@@ -28,7 +29,7 @@ const EntertainmentPanel: React.FC = () => {
   };
 
   return (
-    <AsciiBox title="ENTERTAINMENT">
+    <AsciiBox title="娱乐">
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         {todayEnts.map((ent) => (
           <li
@@ -70,7 +71,8 @@ const EntertainmentPanel: React.FC = () => {
       {todayEnts.length === 0 && (
         <div style={{ textAlign: 'center', padding: 'var(--space-3) 0' }}>
           <img
-            src="app://resources/alo-empty-state.png"
+            src={resources.emptyState}
+            className="alo-empty-state-image"
             alt="Empty state"
             style={{ width: '80px', height: 'auto', opacity: 0.5, marginBottom: 'var(--space-2)' }}
           />

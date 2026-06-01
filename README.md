@@ -1,112 +1,96 @@
-# ASCII Life OS (ALO)
+# Forge
 
-> **你的人生，值得一款操作系统。**
->
-> 把混沌的日常拆成可量化的数值，像玩 RPG 一样训练自己，用一套集成工具把「想做的事」真正推进到「已完成」。
+> Forge yourself —— 自己锻造自己
 
-<!-- 仓库创建后，取消下方徽章注释 -->
-<!-- [![Release](https://img.shields.io/github/v/release/maverickgao8848/matrix-life-os)](https://github.com/maverickgao8848/matrix-life-os/releases) -->
-<!-- [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-blue)]() -->
-<!-- [![License](https://img.shields.io/github/license/maverickgao8848/matrix-life-os)](LICENSE) -->
----
-<img width="2713" height="1572" alt="image" src="https://github.com/user-attachments/assets/03f83d9d-9d28-40b6-9741-59136970861e" />
+Forge 是一个本地优先的个人成长操作系统。它以“周执行，月成长”为核心节奏，把任务、OKR、能力训练、反思沉淀和数据备份放在同一个工作台里，帮助使用者把每天的行动逐步锻造成长期能力。
 
-<img width="2666" height="1518" alt="image" src="https://github.com/user-attachments/assets/6bac0af2-317b-4d69-a599-ec4529cb67da" />
+## 二次开发说明
 
-<img width="2717" height="1463" alt="image" src="https://github.com/user-attachments/assets/1f302fa5-0eca-4b0c-9835-2f55069a4c2a" />
+本仓库是对原项目的 fork 二次开发版本。
 
+- 当前维护仓库: <https://github.com/BonusWang/matrix-life-os>
+- Fork 来源项目: <https://github.com/maverickgao8848/matrix-life-os>
+- 当前发布版本: `v1.0.0`
 
----
+本版本在原有 ASCII Life OS 的基础上进行了品牌、视觉、数据持久化和复盘工作流调整。原项目的基础能力仍被保留，Forge 版本重点强化本地数据稳定性、中文使用体验和长期成长规划。
 
-## 这不是又一个 Todo App
+## v1.0.0 发布重点
 
-市面上有无数待办工具，但它们只解决**记录**，不解决**成长**。
+- 品牌从 `ASCII LIFE OS` 调整为 `Forge`，slogan 为 `Forge yourself —— 自己锻造自己`。
+- 增加 orbit-general 参考风格，可通过 `[◇ 风格切换]` 在原风格与新风格之间切换。
+- 模块标题、页面文案和 OpenSpec 文档模板进一步中文化，降低日常使用理解成本。
+- 新增“周复盘”独立页面，采用 Wiki 式“一周一页”结构。
+- 周复盘模板精简为三个启动问题：本周完成了什么、本周卡在哪里、下周只调整一件什么事。
+- 数据固定保存在 `%APPDATA%\Forge\alo-data.json`，开发页和 Electron 读取同一份本地数据。
+- 停止启动时自动搬移历史任务，避免跨天重启后误以为任务丢失。
+- OpenSpec 需求已归档，正式规格保存在 `openspec/specs/`。
 
-ALO 的核心设计是：**把「自我管理」变成一套可观测、可训练、可复盘的操作系统**。
-
-- 🎮 **能力数值化** — 像 RPG 角色面板一样，把领导力、执行力、创造力等维度量化为可追踪的数值，定期训练、直观成长
-- 🧩 **多工具集成** — 周看板、月度反思、OKR 追踪、原则面板、能力训练、娱乐管理……不再在 5 个 App 之间切来切去
-- 🖥️ **ASCII 终端美学** — 没有花里胡哨的渐变，只有克制、专注、有点酷的终端风格界面
-- 🔒 **数据完全本地** — 不上传云端，所有数据保存在你的电脑里，支持导出/导入 JSON 备份
-
-<!-- TODO: 替换为实际应用截图 -->
-<!-- ![Dashboard](./docs/screenshot-dashboard.png) -->
-<!-- ![Reflection](./docs/screenshot-reflection.png) -->
-
----
-
-## 下载安装
-
-| 平台 | 下载 | 说明 |
-|------|------|------|
-| **Windows** | [Releases](https://github.com/maverickgao8848/matrix-life-os/releases) 下载 `.exe` | 便携版，双击即用，无需安装 |
-| **macOS** | [Releases](https://github.com/maverickgao8848/matrix-life-os/releases) 下载 `.dmg` | 拖拽到「应用程序」文件夹即可 |
-
-> **macOS 用户注意**：当前版本未进行 Apple 开发者签名，首次打开时可能会看到「无法验证开发者」提示。请前往 **系统设置 → 隐私与安全性** → 找到 ALO → 点击 **「仍要打开」**。或在终端执行：
-> ```bash
-> xattr -cr /Applications/ASCII\ Life\ OS.app
-> ```
-
----
-
-## 功能模块一览
+## 功能模块
 
 | 模块 | 作用 |
-|------|------|
-| **周看板** | 任务拖拽管理 + 本周进度追踪 + 四象限筛选 |
-| **能力雷达** | 自定义维度，定期打分，可视化成长曲线 |
-| **能力训练** | 针对弱项制定训练计划，记录每次训练日志 |
-| **OKR 面板** | 目标与关键结果追踪，拆解长期愿景为季度/月度行动 |
-| **反思库** | 月度复盘、情绪记录、标签筛选，构建个人知识库 |
-| **原则面板** | 写下你的决策原则，在迷茫时给自己一份锚定 |
-| **娱乐追踪** | 记录游戏/影视/阅读，平衡奋斗与放松 |
-| **数据备份** | 一键导出全部数据为 JSON，换电脑不丢档 |
+| --- | --- |
+| 周看板 | 按周组织任务，支持拖拽、完成状态和收纳箱 |
+| 周复盘 | 一周一页，记录完成、卡点和下周调整 |
+| 反思库 | 保存每日反思和周复盘沉淀，支持标签识别 |
+| 月度 OKR | 管理目标和关键结果，将长期方向拆成月度行动 |
+| 能力系统 | 管理能力项、训练任务和能力阅读面板 |
+| 原则面板 | 保存个人决策原则 |
+| 模块系统 | 按需启用日历、习惯、心情、灵感、娱乐、时间块等模块 |
+| 数据备份 | 本地数据导出、导入和回滚辅助 |
 
----
+## 数据存储
 
-## 技术栈
+Forge 默认不上传任何个人数据。当前本地数据固定保存在：
 
-| 层级 | 技术 |
-|------|------|
-| 前端框架 | React 19 + TypeScript |
-| 构建工具 | Vite |
-| 状态管理 | Zustand + persist 中间件 |
-| 样式方案 | CSS Variables（深色 / 浅色双主题） |
-| 桌面端 | Electron + electron-builder |
-| 拖拽交互 | @dnd-kit |
+```text
+%APPDATA%\Forge\alo-data.json
+```
 
----
+历史兼容说明：
+
+- 旧版数据可能位于 `%APPDATA%\ascii-life-os\alo-data.json`。
+- 当 Forge 数据文件不存在时，应用会尝试从旧目录迁移一次。
+- 只有显式传入 `--reset-data`、`--clear-data` 或 `FORGE_RESET_DATA=1` 时，才允许清理数据文件。
 
 ## 开发环境
 
 ```bash
-# 克隆仓库
-git clone https://github.com/maverickgao8848/matrix-life-os.git
-cd matrix-app
-
-# 安装依赖
 npm install
-
-# 开发模式（热更新）
 npm run dev
-
-# 构建前端资源
 npm run build
-
-# 本地打包 Electron 应用
 npm run electron:build
 ```
 
----
+开发页 `http://127.0.0.1:5173/` 会通过 Vite 本地接口读写同一份 `%APPDATA%\Forge\alo-data.json`，因此开发调试和 Electron 运行看到的数据应保持一致。
+
+## 技术栈
+
+| 层级 | 技术 |
+| --- | --- |
+| 前端 | React 19 + TypeScript |
+| 构建 | Vite |
+| 状态管理 | Zustand + persist |
+| 桌面端 | Electron + electron-builder |
+| 拖拽 | @dnd-kit |
+| 需求流程 | OpenSpec |
+
+## 发布
+
+本仓库使用 GitHub Actions 在推送 `v*` tag 时触发 Electron 打包和 GitHub Release 发布。
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Release 页面：<https://github.com/BonusWang/matrix-life-os/releases>
 
 ## 项目结构
 
-```
-matrix-app/
-├── build/              # 应用图标（electron-builder 自动生成 .ico / .icns）
-├── electron/           # Electron 主进程
-│   ├── main.cjs        # 主进程入口
-│   └── preload.cjs     # 预加载脚本
+```text
+matrix-life-os/
+├── electron/           # Electron 主进程与 preload
+├── openspec/           # OpenSpec 规格、归档需求和工作流文档
 ├── public/             # 静态资源
 ├── src/
 │   ├── components/     # 通用组件
@@ -116,22 +100,8 @@ matrix-app/
 │   ├── store/          # Zustand Store
 │   ├── types/          # TypeScript 类型
 │   └── utils/          # 工具函数
-├── .github/workflows/  # CI/CD 自动化发布
-└── ...
+└── .github/workflows/  # GitHub Actions 发布流程
 ```
-
----
-
-## 数据存储
-
-所有数据保存在操作系统标准的用户数据目录，**不上传任何服务器**：
-
-- **Windows**: `%APPDATA%/ASCII Life OS/`
-- **macOS**: `~/Library/Application Support/ASCII Life OS/`
-
-支持通过应用内「数据备份」面板随时导出/导入 JSON 备份文件。
-
----
 
 ## 开源协议
 

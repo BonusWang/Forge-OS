@@ -15,7 +15,17 @@ export const createReflectionSlice: StateCreator<ReflectionSlice> = (set, get) =
   reflections: [],
 
   saveReflection: (reflection) => {
-    const existing = get().reflections.find((r) => r.date === reflection.date);
+    const nextKind = reflection.kind ?? 'daily';
+    const existing = get().reflections.find((r) => {
+      const currentKind = r.kind ?? 'daily';
+      if (nextKind === 'weeklyReview') {
+        return (
+          currentKind === 'weeklyReview' &&
+          r.periodStart === reflection.periodStart
+        );
+      }
+      return currentKind === 'daily' && r.date === reflection.date;
+    });
     if (existing) {
       set({
         reflections: get().reflections.map((r) =>
@@ -47,6 +57,6 @@ export const createReflectionSlice: StateCreator<ReflectionSlice> = (set, get) =
   },
 
   getReflectionByDate: (date) => {
-    return get().reflections.find((r) => r.date === date);
+    return get().reflections.find((r) => (r.kind ?? 'daily') === 'daily' && r.date === date);
   },
 });

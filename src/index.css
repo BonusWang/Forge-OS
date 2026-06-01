@@ -1,8 +1,8 @@
-/* ASCII Life OS — Global Styles
+/* Forge — Global Styles
  * Visual Direction: The Monastic Terminal (Scriptorium Parchment)
  */
 
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
 
 /* ============================================================
    1. Design Tokens
@@ -134,7 +134,7 @@ body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: url('app://resources/background.webp');
+  background-image: var(--alo-background-image);
   background-size: cover;
   background-position: center top;
   opacity: 0.08;
@@ -339,6 +339,13 @@ pre, code {
   }
   .reflection-card-grid {
     grid-template-columns: 1fr !important;
+  }
+  .reflection-grid {
+    grid-template-columns: 1fr !important;
+    gap: var(--space-6) !important;
+  }
+  .system-layout {
+    flex-direction: column !important;
   }
   .font-display {
     font-size: 22px;

@@ -49,10 +49,16 @@ const ReflectionForm: React.FC<ReflectionFormProps> = ({
     );
     if (missingRequired) return;
 
-    const tags = generateTags(template, answers);
+    const tags =
+      existingReflection?.kind === 'weeklyReview'
+        ? existingReflection.tags
+        : generateTags(template, answers);
 
     saveReflection({
       date,
+      kind: existingReflection?.kind,
+      periodStart: existingReflection?.periodStart,
+      periodEnd: existingReflection?.periodEnd,
       templateId: template.id,
       answers,
       tags,

@@ -4,6 +4,7 @@ import ReflectionFilter from './ReflectionFilter';
 import { useAppStore } from '../../store/useAppStore';
 import { aloCopy } from '../../copy/alo-copy';
 import type { Reflection } from '../../types';
+import { resources } from '../../utils/assets';
 
 interface ReflectionGridProps {
   onViewDetail?: (reflection: Reflection) => void;
@@ -70,7 +71,8 @@ const ReflectionGrid: React.FC<ReflectionGridProps> = ({ onViewDetail }) => {
       {paginated.length === 0 && (
         <div style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
           <img
-            src="app://resources/alo-empty-state.png"
+            src={resources.emptyState}
+            className="alo-empty-state-image"
             alt="Empty state"
             style={{ width: '120px', height: 'auto', opacity: 0.7, marginBottom: 'var(--space-3)' }}
           />

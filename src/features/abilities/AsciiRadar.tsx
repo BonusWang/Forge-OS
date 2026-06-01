@@ -10,7 +10,7 @@ const AsciiRadar: React.FC = () => {
 
   if (abilities.length === 0) {
     return (
-      <AsciiBox title="ABILITY RADAR">
+      <AsciiBox title="能力雷达">
         <div className="font-body" style={{ color: 'var(--text-muted)' }}>
           {aloCopy.emptyStates.radar}
         </div>
@@ -21,7 +21,7 @@ const AsciiRadar: React.FC = () => {
   const asciiArt = gridLines.map((row) => row.join('')).join('\n');
 
   return (
-    <AsciiBox title="ABILITY RADAR">
+    <AsciiBox title="能力雷达">
       <pre
         className="font-mono-data"
         style={{

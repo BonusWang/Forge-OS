@@ -48,7 +48,7 @@ const MonkQuote: React.FC = () => {
             userSelect: 'none',
           }}
         >
-          —— 你的室友，ASCII OS
+          —— Forge
         </div>
       </div>
     </AsciiBox>

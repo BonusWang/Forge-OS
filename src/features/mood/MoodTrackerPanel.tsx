@@ -43,7 +43,7 @@ const MoodTrackerPanel: React.FC = () => {
   };
 
   return (
-    <AsciiBox title="MOOD TRACKER">
+    <AsciiBox title="情绪追踪">
       {/* Today's entry */}
       <div style={{ marginBottom: 'var(--space-4)' }}>
         <div

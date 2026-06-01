@@ -1,10 +1,9 @@
 import { useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { getTodayString, getWeekStart, isSameWeek } from '../utils/date';
-import { format, subDays } from 'date-fns';
+import { getTodayString, getWeekStart } from '../utils/date';
 
 export const useWeekCleanup = () => {
-  const { config, archiveWeekTasks, migrateUnfinishedTasks, updateConfig } = useAppStore();
+  const { config, updateConfig } = useAppStore();
 
   useEffect(() => {
     const today = getTodayString();
@@ -13,18 +12,6 @@ export const useWeekCleanup = () => {
     // First time visit or same day - no action needed beyond updating lastVisit
     if (config.lastVisitDate === today) return;
 
-    // Check if week changed
-    if (!isSameWeek(config.currentWeekStart, todayWeekStart)) {
-      // New week: archive completed, move active to backlog
-      archiveWeekTasks(config.currentWeekStart);
-      updateConfig({ currentWeekStart: todayWeekStart, lastVisitDate: today });
-      return;
-    }
-
-    // Same week, different day: migrate yesterday's unfinished tasks to today
-    const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
-    migrateUnfinishedTasks(yesterday, today);
-
-    updateConfig({ lastVisitDate: today });
-  }, []);
+    updateConfig({ currentWeekStart: todayWeekStart, lastVisitDate: today });
+  }, [config.lastVisitDate, updateConfig]);
 };

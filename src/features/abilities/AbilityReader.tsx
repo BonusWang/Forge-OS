@@ -2,16 +2,18 @@ import React from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import AsciiBox from '../../components/AsciiBox';
 import { aloCopy } from '../../copy/alo-copy';
+import { resources } from '../../utils/assets';
 
 const AbilityReader: React.FC = () => {
   const { abilities } = useAppStore();
 
   if (abilities.length === 0) {
     return (
-      <AsciiBox title="ABILITY READER">
+      <AsciiBox title="能力阅读">
         <div style={{ textAlign: 'center', padding: 'var(--space-4) 0' }}>
           <img
-            src="app://resources/alo-empty-state.png"
+            src={resources.emptyState}
+            className="alo-empty-state-image"
             alt="Empty state"
             style={{ width: '120px', height: 'auto', opacity: 0.7, marginBottom: 'var(--space-3)' }}
           />
@@ -84,7 +86,7 @@ const AbilityReader: React.FC = () => {
   const abilityPolygon = points.map((p) => `${p.x},${p.y}`).join(' ');
 
   return (
-    <AsciiBox title="ABILITY READER">
+    <AsciiBox title="能力阅读">
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: 'block' }}>
           {/* Grid polygons */}

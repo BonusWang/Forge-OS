@@ -44,7 +44,7 @@ const UpdatePanel: React.FC = () => {
   }[status];
 
   return (
-    <AsciiBox title="UPDATE">
+    <AsciiBox title="更新">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <div className="font-body" style={{ color: 'var(--text-secondary)' }}>
           {systemCopy.update.currentVersion}：

@@ -56,7 +56,7 @@ const HabitTrackerPanel: React.FC = () => {
 
   return (
     <>
-      <AsciiBox title="HABIT TRACKER">
+      <AsciiBox title="习惯追踪">
         {habits.length === 0 ? (
           <div
             className="font-body"

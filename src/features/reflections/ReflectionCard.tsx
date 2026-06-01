@@ -10,6 +10,10 @@ interface ReflectionCardProps {
 const ReflectionCard: React.FC<ReflectionCardProps> = ({ reflection, onClick }) => {
   const reflectionTemplates = useAppStore((s) => s.reflectionTemplates);
   const template = reflectionTemplates.find((t) => t.id === reflection.templateId);
+  const isWeeklyReview = reflection.kind === 'weeklyReview';
+  const dateLabel = isWeeklyReview && reflection.periodStart && reflection.periodEnd
+    ? `${reflection.periodStart} - ${reflection.periodEnd}`
+    : reflection.date;
 
   // Find a numeric question to display as "stars" (prefer control-related)
   const numericQuestion = template?.questions.find((q) => q.type === 'number');
@@ -48,9 +52,21 @@ const ReflectionCard: React.FC<ReflectionCardProps> = ({ reflection, onClick }) 
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-2)' }}>
         <span className="font-h3" style={{ color: 'var(--text-primary)' }}>
-          {reflection.date}
+          {dateLabel}
         </span>
         {stars && <span style={{ color: 'var(--accent-gold)' }}>{stars}</span>}
+        {isWeeklyReview && !stars && (
+          <span
+            className="font-caption"
+            style={{
+              color: 'var(--accent-gold)',
+              border: '1px solid var(--border-primary)',
+              padding: '0 var(--space-1)',
+            }}
+          >
+            周复盘
+          </span>
+        )}
       </div>
 
       {template && (

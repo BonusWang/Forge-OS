@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import AsciiBox from '../../components/AsciiBox';
 import { aloCopy } from '../../copy/alo-copy';
+import { resources } from '../../utils/assets';
 
 const PrinciplesPanel: React.FC = () => {
   const { principles, updatePrinciples } = useAppStore();
@@ -30,7 +31,7 @@ const PrinciplesPanel: React.FC = () => {
   };
 
   return (
-    <AsciiBox title="MY PRINCIPLES">
+    <AsciiBox title="我的原则">
       {isEditing ? (
         <div>
           <textarea
@@ -112,7 +113,8 @@ const PrinciplesPanel: React.FC = () => {
           {sortedPrinciples.length === 0 && (
             <div style={{ textAlign: 'center', padding: 'var(--space-3) 0' }}>
               <img
-                src="app://resources/alo-empty-state.png"
+                src={resources.emptyState}
+                className="alo-empty-state-image"
                 alt="Empty state"
                 style={{ width: '80px', height: 'auto', opacity: 0.5, marginBottom: 'var(--space-2)' }}
               />

@@ -47,7 +47,7 @@ const AbilityManagementPanel: React.FC = () => {
   };
 
   return (
-    <AsciiBox title="ABILITY TRAINING">
+    <AsciiBox title="能力训练">
       {abilities.length === 0 && (
         <div className="font-body" style={{ color: 'var(--text-muted)', marginBottom: 'var(--space-2)' }}>
           {aloCopy.emptyStates.abilityManagement}

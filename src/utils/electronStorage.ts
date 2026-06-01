@@ -21,6 +21,78 @@ interface ElectronAPI {
 }
 
 const api: ElectronAPI | undefined = (window as any).electronAPI;
+const DEV_STORAGE_ENDPOINT = '/__forge_data__';
+
+function canUseDevServerStorage(): boolean {
+  return (
+    window.location.protocol.startsWith('http') &&
+    ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)
+  );
+}
+
+function readLocalStorageItem(name: string): StorageValue<unknown> | null {
+  try {
+    const raw = localStorage.getItem(name);
+    if (raw === null) return null;
+    return JSON.parse(raw) as StorageValue<unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalStorageItem(name: string, value: StorageValue<unknown>): void {
+  try {
+    localStorage.setItem(name, JSON.stringify(value));
+  } catch {
+    // Storage unavailable, ignore.
+  }
+}
+
+function removeLocalStorageItem(name: string): void {
+  try {
+    localStorage.removeItem(name);
+  } catch {
+    // Storage unavailable, ignore.
+  }
+}
+
+function createDevServerStorage(): PersistStorage<unknown> {
+  const storageUrl = (name: string) => `${DEV_STORAGE_ENDPOINT}/${encodeURIComponent(name)}`;
+  const request = (
+    method: 'GET' | 'PUT' | 'DELETE',
+    name: string,
+    value?: StorageValue<unknown>
+  ): StorageValue<unknown> | boolean | null => {
+    try {
+      const xhr = new XMLHttpRequest();
+      xhr.open(method, storageUrl(name), false);
+      if (method === 'PUT') {
+        xhr.setRequestHeader('Content-Type', 'application/json');
+      }
+      xhr.send(method === 'PUT' ? JSON.stringify(value) : undefined);
+      if (xhr.status < 200 || xhr.status >= 300) return null;
+      if (method === 'GET') return JSON.parse(xhr.responseText) as StorageValue<unknown> | null;
+      return true;
+    } catch {
+      return null;
+    }
+  };
+
+  return {
+    getItem(name: string): StorageValue<unknown> | null {
+      const value = request('GET', name);
+      return value === null ? readLocalStorageItem(name) : (value as StorageValue<unknown> | null);
+    },
+    setItem(name: string, value: StorageValue<unknown>): void {
+      if (request('PUT', name, value) === true) return;
+      writeLocalStorageItem(name, value);
+    },
+    removeItem(name: string): void {
+      if (request('DELETE', name) === true) return;
+      removeLocalStorageItem(name);
+    },
+  };
+}
 
 function createStorage(): PersistStorage<unknown> {
   if (api) {
@@ -157,30 +229,20 @@ function createStorage(): PersistStorage<unknown> {
     };
   }
 
+  if (canUseDevServerStorage()) {
+    return createDevServerStorage();
+  }
+
   // Plain browser / dev-server fallback
   return {
     getItem(name: string): StorageValue<unknown> | null {
-      try {
-        const raw = localStorage.getItem(name);
-        if (raw === null) return null;
-        return JSON.parse(raw) as StorageValue<unknown>;
-      } catch {
-        return null;
-      }
+      return readLocalStorageItem(name);
     },
     setItem(name: string, value: StorageValue<unknown>): void {
-      try {
-        localStorage.setItem(name, JSON.stringify(value));
-      } catch {
-        // Storage full or unavailable — silently ignore
-      }
+      writeLocalStorageItem(name, value);
     },
     removeItem(name: string): void {
-      try {
-        localStorage.removeItem(name);
-      } catch {
-        // ignore
-      }
+      removeLocalStorageItem(name);
     },
   };
 }

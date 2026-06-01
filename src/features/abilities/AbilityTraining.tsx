@@ -3,6 +3,7 @@ import { useAppStore } from '../../store/useAppStore';
 import AsciiBox from '../../components/AsciiBox';
 import AsciiProgress from '../../components/AsciiProgress';
 import { aloCopy } from '../../copy/alo-copy';
+import { resources } from '../../utils/assets';
 
 const AbilityTraining: React.FC = () => {
   const { abilities, inboxItems, addAbility, deleteAbility, updateAbility, addAbilityTask, removeAbilityTask, incrementScore, collectAbilityTaskToInbox } = useAppStore();
@@ -51,11 +52,12 @@ const AbilityTraining: React.FC = () => {
   };
 
   return (
-    <AsciiBox title="ABILITY TRAINING">
+    <AsciiBox title="能力训练">
       {abilities.length === 0 && (
         <div style={{ textAlign: 'center', padding: 'var(--space-4) 0' }}>
           <img
-            src="app://resources/alo-empty-state.png"
+            src={resources.emptyState}
+            className="alo-empty-state-image"
             alt="Empty state"
             style={{ width: '120px', height: 'auto', opacity: 0.7, marginBottom: 'var(--space-3)' }}
           />

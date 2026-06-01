@@ -35,7 +35,7 @@ const TimeBlockPanel: React.FC = () => {
 
   return (
     <>
-      <AsciiBox title="TIME BLOCKS">
+      <AsciiBox title="时间块">
         {todayBlocks.length === 0 ? (
           <div
             className="font-body"

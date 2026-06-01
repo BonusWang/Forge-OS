@@ -14,7 +14,7 @@ export const systemCopy = {
   },
 
   backup: {
-    title: 'DATA RITUAL',
+    title: '数据仪式',
     exportButton: '封存罪证',
     importButton: '展开旧账',
     exportSuccess: '卷轴已封存。你的黑历史现在安全地躺在硬盘里了。',
@@ -24,10 +24,10 @@ export const systemCopy = {
   },
 
   about: {
-    title: 'ABOUT',
-    appName: 'ASCII LIFE OS',
-    description: '一个以 ASCII 风格呈现的个人生活管理系统。它不会替你完成任务，但会冷静地记录你欠下了多少。',
-    author: 'ASCII Life OS Contributors',
+    title: '关于 Forge',
+    appName: 'Forge',
+    description: '一个面向个人成长的生活管理系统。Forge yourself —— 自己锻造自己。',
+    author: 'Forge Contributors',
     license: 'MIT',
   },
 
@@ -47,7 +47,7 @@ export const systemCopy = {
   },
 
   // Monk quote box title
-  quoteTitle: 'DAILY TRUTH',
+  quoteTitle: '每日真相',
 } as const;
 
 export type SystemCopy = typeof systemCopy;

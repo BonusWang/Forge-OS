@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import AsciiBox from '../../components/AsciiBox';
 import { aloCopy } from '../../copy/alo-copy';
+import { resources } from '../../utils/assets';
 
 const getCurrentMonth = () => {
   const now = new Date();
@@ -101,7 +102,7 @@ const OKRPanel: React.FC = () => {
   const isInInbox = (krId: string) => inboxItems.some((item) => item.id === krId);
 
   return (
-    <AsciiBox title={`OKR (${currentMonth})`}>
+    <AsciiBox title={`月度 OKR (${currentMonth})`}>
       <div className="font-caption" style={{ color: 'var(--text-muted)', marginBottom: 'var(--space-2)' }}>
         KR 完成: {completedKRCount}/{totalKRCount} | 收纳箱: {inboxItems.length} 项
       </div>
@@ -110,7 +111,8 @@ const OKRPanel: React.FC = () => {
       {currentObjectives.length === 0 && !isAddingObj && (
         <div style={{ textAlign: 'center', padding: 'var(--space-4) 0' }}>
           <img
-            src="app://resources/alo-empty-state.png"
+            src={resources.emptyState}
+            className="alo-empty-state-image"
             alt="Empty state"
             style={{ width: '120px', height: 'auto', opacity: 0.7, marginBottom: 'var(--space-3)' }}
           />
@@ -409,7 +411,8 @@ const OKRPanel: React.FC = () => {
         {inboxItems.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 'var(--space-3) 0' }}>
             <img
-              src="app://resources/alo-empty-state.png"
+              src={resources.emptyState}
+              className="alo-empty-state-image"
               alt="Empty state"
               style={{ width: '80px', height: 'auto', opacity: 0.5, marginBottom: 'var(--space-2)' }}
             />

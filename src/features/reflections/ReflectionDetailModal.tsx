@@ -18,6 +18,10 @@ const ReflectionDetailModal: React.FC<ReflectionDetailModalProps> = ({
   if (!reflection) return null;
 
   const template = reflectionTemplates.find((t) => t.id === reflection.templateId);
+  const isWeeklyReview = reflection.kind === 'weeklyReview';
+  const detailTitle = isWeeklyReview && reflection.periodStart && reflection.periodEnd
+    ? `周复盘详情 - ${reflection.periodStart} - ${reflection.periodEnd}`
+    : `反思详情 - ${reflection.date}`;
 
   return (
     <div
@@ -51,7 +55,7 @@ const ReflectionDetailModal: React.FC<ReflectionDetailModalProps> = ({
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
           <h3 className="font-h2" style={{ margin: 0, color: 'var(--accent-gold)' }}>
-            {isEditing ? '编辑反思' : `反思详情 - ${reflection.date}`}
+            {isEditing ? '编辑反思' : detailTitle}
           </h3>
           <button
             onClick={onClose}

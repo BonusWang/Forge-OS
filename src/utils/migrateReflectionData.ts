@@ -1,5 +1,9 @@
 import type { Reflection, ReflectionTemplate } from '../types';
-import { DEFAULT_TEMPLATE } from '../store/slices/reflectionTemplateSlice';
+import {
+  DEFAULT_TEMPLATE,
+  WEEKLY_REVIEW_LITE_TEMPLATE,
+  WEEKLY_REVIEW_TEMPLATE,
+} from '../store/slices/reflectionTemplateSlice';
 
 /**
  * 检测并迁移旧格式的反思数据到新格式
@@ -59,16 +63,18 @@ export function migrateAllReflections(
   templates: ReflectionTemplate[]
 ): { reflections: Reflection[]; templates: ReflectionTemplate[] } {
   const hasLegacy = reflections.some(isLegacyReflection);
+  const builtinTemplates = [DEFAULT_TEMPLATE, WEEKLY_REVIEW_LITE_TEMPLATE, WEEKLY_REVIEW_TEMPLATE];
+  const nextTemplates = [...templates];
 
-  if (!hasLegacy) {
-    return { reflections: reflections as Reflection[], templates };
+  for (const template of builtinTemplates) {
+    if (!nextTemplates.some((t) => t.id === template.id)) {
+      nextTemplates.unshift(template);
+    }
   }
 
-  // 确保默认模板存在
-  const hasDefaultTemplate = templates.some((t) => t.id === DEFAULT_TEMPLATE.id);
-  const nextTemplates = hasDefaultTemplate
-    ? templates
-    : [DEFAULT_TEMPLATE, ...templates];
+  if (!hasLegacy) {
+    return { reflections: reflections as Reflection[], templates: nextTemplates };
+  }
 
   const nextReflections = reflections.map((r) => {
     if (isLegacyReflection(r)) {

@@ -2,12 +2,35 @@ const { app, BrowserWindow, ipcMain, protocol } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
-const DATA_FILE = path.join(app.getPath('userData'), 'alo-data.json');
+const DATA_DIR_NAME = 'Forge';
+const LEGACY_DATA_DIR_NAME = 'ascii-life-os';
+const LEGACY_DATA_DIR = path.join(app.getPath('appData'), LEGACY_DATA_DIR_NAME);
+const DATA_DIR = process.env.FORGE_DATA_DIR
+  ? path.resolve(process.env.FORGE_DATA_DIR)
+  : path.join(app.getPath('appData'), DATA_DIR_NAME);
+
+app.setPath('userData', DATA_DIR);
+
+const DATA_FILE = path.join(DATA_DIR, 'alo-data.json');
 const BACKUP_FILE = DATA_FILE + '.bak';
 const ROLLBACK_FILE = DATA_FILE + '.rollback';
 const TEMP_FILE = DATA_FILE + '.tmp';
+const LEGACY_DATA_FILE = path.join(LEGACY_DATA_DIR, 'alo-data.json');
+const LEGACY_BACKUP_FILE = LEGACY_DATA_FILE + '.bak';
+const RESET_DATA_FLAGS = new Set(['--reset-data', '--clear-data']);
+const SHOULD_RESET_DATA =
+  process.env.FORGE_RESET_DATA === '1' || process.argv.some((arg) => RESET_DATA_FLAGS.has(arg));
+let didResetData = false;
 
 const PACKAGE_JSON = path.join(__dirname, '../package.json');
+
+function ensureDataDir() {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  } catch (e) {
+    console.error(`Failed to create data directory ${DATA_DIR}:`, e);
+  }
+}
 
 function readFileSafe(filePath) {
   try {
@@ -19,6 +42,22 @@ function readFileSafe(filePath) {
     console.error(`Failed to read/parse ${filePath}:`, e);
   }
   return null;
+}
+
+function resetDataIfRequested() {
+  if (!SHOULD_RESET_DATA) return;
+  didResetData = true;
+
+  for (const filePath of [DATA_FILE, BACKUP_FILE, ROLLBACK_FILE, TEMP_FILE]) {
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch (e) {
+      console.error(`Failed to remove data file ${filePath}:`, e);
+    }
+  }
+  writeData({});
 }
 
 function readData() {
@@ -40,6 +79,16 @@ function readData() {
     return data;
   }
 
+  if (!didResetData && DATA_FILE !== LEGACY_DATA_FILE) {
+    console.warn('Forge data file missing, attempting legacy AppData migration...');
+    data = readFileSafe(LEGACY_DATA_FILE) || readFileSafe(LEGACY_BACKUP_FILE);
+    if (data !== null) {
+      console.log('Legacy data migrated into Forge data directory.');
+      writeData(data);
+      return data;
+    }
+  }
+
   console.error('Both primary and backup data files are unavailable.');
   return null;
 }
@@ -47,6 +96,8 @@ function readData() {
 function writeData(data) {
   const json = JSON.stringify(data, null, 2);
   try {
+    ensureDataDir();
+
     // Atomic write: write to temp, then rename over primary
     fs.writeFileSync(TEMP_FILE, json, 'utf-8');
     fs.renameSync(TEMP_FILE, DATA_FILE);
@@ -109,7 +160,7 @@ function createWindow() {
     height: 900,
     minWidth: 800,
     minHeight: 600,
-    title: 'ASCII LIFE OS',
+    title: 'Forge',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -125,6 +176,8 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  resetDataIfRequested();
+
   // Register custom protocol for serving static resources from inside asar
   protocol.registerFileProtocol('app', (request, callback) => {
     const url = request.url.replace('app://', '');

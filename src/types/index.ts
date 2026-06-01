@@ -63,6 +63,9 @@ export interface ReflectionTemplate {
 export interface Reflection {
   id: string;
   date: string;
+  kind?: 'daily' | 'weeklyReview';
+  periodStart?: string;
+  periodEnd?: string;
   templateId: string;
   answers: Record<string, string | number>;
   tags: string[];

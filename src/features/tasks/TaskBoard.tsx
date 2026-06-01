@@ -31,7 +31,11 @@ const DAY_LABELS: Record<string, string> = {
   SUN: '周日',
 };
 
-const TaskBoard: React.FC = () => {
+interface TaskBoardProps {
+  onOpenWeeklyReview?: (weekStart: string) => void;
+}
+
+const TaskBoard: React.FC<TaskBoardProps> = ({ onOpenWeeklyReview }) => {
   const { tasks, moveTask, reorderTasks, inboxItems, addTask, removeFromInbox } = useAppStore();
   const [weekStart, setWeekStartState] = useState(() => getWeekStart());
 
@@ -195,6 +199,29 @@ const TaskBoard: React.FC = () => {
               {aloCopy.actions.currentWeek}
             </button>
           )}
+          <button
+            onClick={() => onOpenWeeklyReview?.(weekStart)}
+            className="font-caption"
+            style={{
+              background: 'none',
+              border: '1px solid var(--border-primary)',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-mono)',
+              padding: 'var(--space-1) var(--space-3)',
+              transition: 'color var(--duration-instant), border-color var(--duration-instant)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = 'var(--text-primary)';
+              e.currentTarget.style.borderColor = 'var(--border-hover)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'var(--text-secondary)';
+              e.currentTarget.style.borderColor = 'var(--border-primary)';
+            }}
+          >
+            [周复盘]
+          </button>
         </div>
 
         <div

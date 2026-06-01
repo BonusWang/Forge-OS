@@ -38,7 +38,7 @@ const InspirationVaultPanel: React.FC = () => {
 
   return (
     <>
-      <AsciiBox title="INSPIRATION VAULT">
+      <AsciiBox title="灵感库">
         {/* Tag filter */}
         {allTags.length > 0 && (
           <div style={{ marginBottom: 'var(--space-3)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-1)' }}>
