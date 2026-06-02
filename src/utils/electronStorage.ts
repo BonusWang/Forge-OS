@@ -14,13 +14,7 @@
 
 import type { PersistStorage, StorageValue } from 'zustand/middleware';
 
-interface ElectronAPI {
-  loadDataSync: () => Record<string, string> | null;
-  saveData: (data: Record<string, string>) => Promise<boolean>;
-  onBeforeQuit: (callback: () => void) => void;
-}
-
-const api: ElectronAPI | undefined = (window as any).electronAPI;
+const api = window.electronAPI;
 const DEV_STORAGE_ENDPOINT = '/__forge_data__';
 
 function canUseDevServerStorage(): boolean {

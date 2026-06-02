@@ -78,7 +78,7 @@ export const createTaskSlice: StateCreator<TaskSlice> = (set, get) => ({
     });
   },
 
-  archiveWeekTasks: (_currentWeekStart) => {
+  archiveWeekTasks: () => {
     const tasks = get().tasks;
     const activeTasks = tasks.filter(
       (t) => t.date !== 'BACKLOG' && t.status === 'active'

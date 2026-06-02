@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { addDays, format, parseISO } from 'date-fns';
 import type { MoodEntry } from '../types';
 
 /**
@@ -11,13 +12,11 @@ export function useMoodTrend(
   days: number = 7
 ): { date: string; mood: number | null; energy: number | null }[] {
   return useMemo(() => {
-    const end = new Date(endDate);
+    const end = parseISO(endDate);
     const result: { date: string; mood: number | null; energy: number | null }[] = [];
 
     for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(end);
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = format(addDays(end, -i), 'yyyy-MM-dd');
       const entry = moods.find((m) => m.date === dateStr);
       result.push({
         date: dateStr,

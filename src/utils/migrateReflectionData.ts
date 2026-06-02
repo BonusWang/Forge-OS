@@ -26,13 +26,15 @@ export interface LegacyReflection {
   updatedAt?: string;
 }
 
-export function isLegacyReflection(r: any): r is LegacyReflection {
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+export function isLegacyReflection(r: unknown): r is LegacyReflection {
+  if (!isRecord(r) || !isRecord(r.answers)) return false;
+
   return (
-    r &&
     typeof r.template === 'string' &&
     r.template === 'obstacle-breakthrough' &&
-    r.answers &&
-    typeof r.answers === 'object' &&
     !Array.isArray(r.answers) &&
     'obstacle' in r.answers
   );
@@ -59,7 +61,7 @@ export function migrateReflection(
 }
 
 export function migrateAllReflections(
-  reflections: any[],
+  reflections: unknown[],
   templates: ReflectionTemplate[]
 ): { reflections: Reflection[]; templates: ReflectionTemplate[] } {
   const hasLegacy = reflections.some(isLegacyReflection);

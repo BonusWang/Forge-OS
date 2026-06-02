@@ -1,14 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { addDays, format } from 'date-fns';
 import AsciiBox from '../components/AsciiBox';
-import OrbitPageHeader from '../components/OrbitPageHeader';
 import { useAppStore } from '../store/useAppStore';
 import { WEEKLY_REVIEW_LITE_TEMPLATE_ID } from '../store/slices/reflectionTemplateSlice';
 import { getNextWeekStart, getPrevWeekStart, getWeekDates, getWeekStart } from '../utils/date';
 import type { Reflection, Task } from '../types';
 
 interface WeeklyReviewPageProps {
-  visualStyle?: 'classic' | 'orbit';
   initialWeekStart?: string;
 }
 
@@ -72,7 +70,7 @@ const WeeklyReviewEditor: React.FC<WeeklyReviewEditorProps> = ({
 
   const fieldStyle: React.CSSProperties = {
     width: '100%',
-    minHeight: '112px',
+    minHeight: '88px',
     resize: 'vertical',
     boxSizing: 'border-box',
     background: 'var(--bg-primary)',
@@ -130,13 +128,11 @@ const WeeklyReviewEditor: React.FC<WeeklyReviewEditorProps> = ({
 };
 
 const WeeklyReviewPage: React.FC<WeeklyReviewPageProps> = ({
-  visualStyle = 'classic',
   initialWeekStart,
 }) => {
   const [weekStart, setWeekStart] = useState(initialWeekStart || getWeekStart());
   const tasks = useAppStore((s) => s.tasks);
   const reflections = useAppStore((s) => s.reflections);
-  const isOrbitStyle = visualStyle === 'orbit';
   const periodEnd = format(addDays(new Date(weekStart), 6), 'yyyy-MM-dd');
   const { weekTasks, completed, active } = useMemo(
     () => getTaskEvidence(tasks, weekStart),
@@ -148,77 +144,35 @@ const WeeklyReviewPage: React.FC<WeeklyReviewPageProps> = ({
   const existingReview = weeklyReviews.find((review) => review.periodStart === weekStart);
 
   return (
-    <div className={isOrbitStyle ? 'orbit-page weekly-review-page' : ''}>
-      {isOrbitStyle && (
-        <OrbitPageHeader
-          eyebrow="Weekly wiki"
-          title="周复盘"
-          kpis={[
-            {
-              label: '本周任务',
-              value: weekTasks.length,
-              detail: `${completed.length} 完成 / ${active.length} 未完成`,
-              tone: completed.length > 0 ? 'green' : 'orange',
-            },
-            {
-              label: '复盘页',
-              value: weeklyReviews.length,
-              detail: '一周一页',
-              tone: 'yellow',
-            },
-            {
-              label: '当前周',
-              value: format(new Date(weekStart), 'M/d'),
-              detail: `至 ${format(new Date(periodEnd), 'M/d')}`,
-              tone: 'muted',
-            },
-            {
-              label: '状态',
-              value: existingReview ? '已写' : '待写',
-              detail: '保存后进入反思库',
-              tone: existingReview ? 'green' : 'orange',
-            },
-          ]}
-        />
-      )}
+    <div className="workspace-page weekly-review-page">
+      <section className="weekly-review-layout workspace-grid workspace-grid--weekly">
+        <AsciiBox title="周页面" className="weekly-review-nav-panel">
+          <div className="weekly-review-nav-content">
+            <div className="weekly-review-nav-actions">
+              <button
+                onClick={() => setWeekStart(getPrevWeekStart(weekStart))}
+                className="font-caption"
+                style={navButtonStyle}
+              >
+                上一周
+              </button>
+              <button
+                onClick={() => setWeekStart(getWeekStart())}
+                className="font-caption"
+                style={navButtonStyle}
+              >
+                本周
+              </button>
+              <button
+                onClick={() => setWeekStart(getNextWeekStart(weekStart))}
+                className="font-caption"
+                style={navButtonStyle}
+              >
+                下一周
+              </button>
+            </div>
 
-      <div
-        className="weekly-review-layout"
-        style={{
-          maxWidth: '1400px',
-          margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: 'minmax(220px, 280px) minmax(0, 1fr)',
-          gap: 'var(--space-6)',
-          alignItems: 'start',
-        }}
-      >
-        <AsciiBox title="周页面">
-          <div style={{ display: 'grid', gap: 'var(--space-2)' }}>
-            <button
-              onClick={() => setWeekStart(getPrevWeekStart(weekStart))}
-              className="font-caption"
-              style={navButtonStyle}
-            >
-              上一周
-            </button>
-            <button
-              onClick={() => setWeekStart(getWeekStart())}
-              className="font-caption"
-              style={navButtonStyle}
-            >
-              本周
-            </button>
-            <button
-              onClick={() => setWeekStart(getNextWeekStart(weekStart))}
-              className="font-caption"
-              style={navButtonStyle}
-            >
-              下一周
-            </button>
-          </div>
-
-          <div style={{ marginTop: 'var(--space-4)' }}>
+            <div className="weekly-review-history">
             {weeklyReviews.length === 0 ? (
               <div className="font-body" style={{ color: 'var(--text-muted)' }}>
                 暂无周复盘
@@ -240,10 +194,11 @@ const WeeklyReviewPage: React.FC<WeeklyReviewPageProps> = ({
                 </button>
               ))
             )}
+            </div>
           </div>
         </AsciiBox>
 
-        <div style={{ display: 'grid', gap: 'var(--space-4)' }}>
+        <div className="weekly-review-main-grid">
           <AsciiBox title={`${weekStart} - ${periodEnd}`}>
             <WeeklyReviewEditor
               key={`${weekStart}-${existingReview?.id ?? 'new'}`}
@@ -284,7 +239,7 @@ const WeeklyReviewPage: React.FC<WeeklyReviewPageProps> = ({
             </div>
           </AsciiBox>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

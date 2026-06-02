@@ -35,6 +35,7 @@ const ModulePicker: React.FC<ModulePickerProps> = ({ isOpen, onClose }) => {
 
   return (
     <div
+      className="module-picker-overlay"
       ref={overlayRef}
       onClick={handleOverlayClick}
       style={{
@@ -53,6 +54,7 @@ const ModulePicker: React.FC<ModulePickerProps> = ({ isOpen, onClose }) => {
       }}
     >
       <div
+        className="module-picker-panel"
         style={{
           backgroundColor: 'var(--bg-secondary)',
           border: '1px solid var(--border-primary)',
@@ -99,12 +101,13 @@ const ModulePicker: React.FC<ModulePickerProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <div className="module-picker-list" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           {modules.map((mod) => {
             const isEnabled = enabledModules.includes(mod.id as ModuleId);
             return (
               <div
                 key={mod.id}
+                className="module-picker-row"
                 style={{
                   display: 'flex',
                   alignItems: 'center',

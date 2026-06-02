@@ -102,7 +102,7 @@ const OKRPanel: React.FC = () => {
   const isInInbox = (krId: string) => inboxItems.some((item) => item.id === krId);
 
   return (
-    <AsciiBox title={`月度 OKR (${currentMonth})`}>
+    <AsciiBox title={`月度 OKR (${currentMonth})`} className="okr-panel">
       <div className="font-caption" style={{ color: 'var(--text-muted)', marginBottom: 'var(--space-2)' }}>
         KR 完成: {completedKRCount}/{totalKRCount} | 收纳箱: {inboxItems.length} 项
       </div>
@@ -404,12 +404,15 @@ const OKRPanel: React.FC = () => {
       )}
 
       {/* Inbox (收纳箱) */}
-      <div style={{ marginTop: 'var(--space-4)', borderTop: '2px dashed var(--border-primary)', paddingTop: 'var(--space-3)' }}>
+      <div
+        className="okr-inbox-section"
+        style={{ marginTop: 'var(--space-4)', borderTop: '2px dashed var(--border-primary)', paddingTop: 'var(--space-3)' }}
+      >
         <div className="font-h3" style={{ color: 'var(--accent-gold)', marginBottom: 'var(--space-2)' }}>
           收纳箱 (已选 KR)
         </div>
         {inboxItems.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 'var(--space-3) 0' }}>
+          <div className="okr-empty-inbox" style={{ textAlign: 'center', padding: 'var(--space-3) 0' }}>
             <img
               src={resources.emptyState}
               className="alo-empty-state-image"

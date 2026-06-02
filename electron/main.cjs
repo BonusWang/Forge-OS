@@ -160,7 +160,7 @@ function createWindow() {
     height: 900,
     minWidth: 800,
     minHeight: 600,
-    title: 'Forge',
+    title: 'Forge-OS',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

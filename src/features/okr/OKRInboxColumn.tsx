@@ -76,6 +76,7 @@ const OKRInboxColumn: React.FC = () => {
 
   return (
     <div
+      className="okr-inbox-column"
       style={{
         border: '1px dashed var(--accent-gold)',
         backgroundColor: 'var(--bg-secondary)',

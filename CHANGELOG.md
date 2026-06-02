@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+## [1.0.1] - 2026-06-02
+
+### Changed
+- 统一周看板、反思库、周复盘和系统页的桌面工作台排版，减少中心空白和错位感。
+- 周看板顶部今日模块调整为紧凑操作带，保留任务看板作为首屏主工作区。
+- 周复盘改为顶部周导航工具条，加宽复盘编辑和本周证据的主工作区。
+- 反思库能力区调整为辅助栏，系统页调整为 2x2 设置面板。
+- 项目展示名调整为 `Forge-OS`，用于强化“确认目标、持续锻造自己”的产品定位。
+- 本地远端仓库和 README 链接同步为 `BonusWang/Forge-OS`。
+- 构建产物名调整为 `Forge-OS-${version}-${arch}.${ext}`。
+
+### Fixed
+- 修复情绪追踪已保存记录在刷新后仍可重复保存的问题。
+- 修复 classic/orbit 风格切换导致页面业务结构和排版形态不一致的问题。
+
+### Notes
+- 数据目录继续保留 `%APPDATA%\Forge`，避免改名影响已有用户数据。
+
 ## [1.0.0] - 2026-06-02
 
 ### Added

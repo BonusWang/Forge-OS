@@ -35,10 +35,10 @@ const TimeBlockPanel: React.FC = () => {
 
   return (
     <>
-      <AsciiBox title="时间块">
+      <AsciiBox title="时间块" className="dashboard-status-card dashboard-status-card--time-block">
         {todayBlocks.length === 0 ? (
           <div
-            className="font-body"
+            className="font-body time-block-empty"
             style={{
               color: 'var(--text-secondary)',
               textAlign: 'center',
@@ -174,7 +174,7 @@ const TimeBlockPanel: React.FC = () => {
         )}
 
         {/* Add button */}
-        <div style={{ marginTop: 'var(--space-3)', textAlign: 'center' }}>
+        <div className="time-block-actions" style={{ marginTop: 'var(--space-3)', textAlign: 'center' }}>
           <button
             onClick={() => setEditorOpen(true)}
             className="font-body"

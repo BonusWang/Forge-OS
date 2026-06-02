@@ -1,24 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import AsciiBox from '../../components/AsciiBox';
 import { toMonksCalendar } from '../../utils/monksCalendar';
 import { checkUpdate, APP_VERSION } from '../../utils/checkUpdate';
 import { systemCopy } from '../../copy/system-copy';
 
 const UpdatePanel: React.FC = () => {
-  const [version, setVersion] = useState<string>(APP_VERSION);
+  const [version] = useState<string>(() => {
+    try {
+      return window.electronAPI?.getAppVersion?.() ?? APP_VERSION;
+    } catch {
+      return APP_VERSION;
+    }
+  });
   const [status, setStatus] = useState<
     'idle' | 'checking' | 'up-to-date' | 'has-update' | 'error'
   >('idle');
   const [latestUrl, setLatestUrl] = useState<string>('');
-
-  useEffect(() => {
-    try {
-      const v = window.electronAPI?.getAppVersion?.();
-      if (v) setVersion(v);
-    } catch {
-      // fallback to APP_VERSION
-    }
-  }, []);
 
   const handleCheck = async () => {
     setStatus('checking');

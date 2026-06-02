@@ -14,7 +14,11 @@ export interface AbilitySlice {
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
-export const createAbilitySlice: StateCreator<AbilitySlice> = (set, get) => ({
+type AbilitySliceState = AbilitySlice & {
+  inboxItems: InboxItem[];
+};
+
+export const createAbilitySlice: StateCreator<AbilitySliceState, [], [], AbilitySlice> = (set, get) => ({
   abilities: [],
 
   addAbility: (ability) => {
@@ -67,7 +71,7 @@ export const createAbilitySlice: StateCreator<AbilitySlice> = (set, get) => ({
   },
 
   collectAbilityTaskToInbox: (abilityId, taskId) => {
-    const state = get() as any;
+    const state = get();
     const alreadyInInbox = state.inboxItems.some((item: InboxItem) => item.id === taskId);
     if (alreadyInInbox) return;
 
@@ -84,6 +88,6 @@ export const createAbilitySlice: StateCreator<AbilitySlice> = (set, get) => ({
       abilityPoints: task.points,
       abilityName: ability.name,
     };
-    set({ inboxItems: [...state.inboxItems, inboxItem] } as any);
+    set({ inboxItems: [...state.inboxItems, inboxItem] });
   },
 });

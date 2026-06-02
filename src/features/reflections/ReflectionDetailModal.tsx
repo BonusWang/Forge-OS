@@ -53,8 +53,8 @@ const ReflectionDetailModal: React.FC<ReflectionDetailModalProps> = ({
           overflow: 'auto',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
-          <h3 className="font-h2" style={{ margin: 0, color: 'var(--accent-gold)' }}>
+        <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
+          <h3 className="font-h2 modal-title" style={{ margin: 0, color: 'var(--accent-gold)' }}>
             {isEditing ? '编辑反思' : detailTitle}
           </h3>
           <button

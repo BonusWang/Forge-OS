@@ -1,14 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { aloCopy } from '../../copy/alo-copy';
 import { generateTags } from '../../hooks/useReflectionTags';
-import type { Reflection } from '../../types';
+import type { Reflection, ReflectionTemplate } from '../../types';
 
 interface ReflectionFormProps {
   date: string;
   existingReflection?: Reflection;
   onSave?: () => void;
 }
+
+const createInitialAnswers = (
+  existingReflection: Reflection | undefined,
+  template: ReflectionTemplate | undefined
+) => {
+  if (existingReflection) {
+    return { ...existingReflection.answers };
+  }
+
+  const initial: Record<string, string | number> = {};
+  template?.questions.forEach((q) => {
+    initial[q.id] = q.type === 'number' ? q.min ?? 1 : '';
+  });
+  return initial;
+};
 
 const ReflectionForm: React.FC<ReflectionFormProps> = ({
   date,
@@ -23,23 +38,9 @@ const ReflectionForm: React.FC<ReflectionFormProps> = ({
 
   const todayMood = getMoodByDate(date);
 
-  const [answers, setAnswers] = useState<Record<string, string | number>>({});
-
-  useEffect(() => {
-    if (existingReflection) {
-      setAnswers({ ...existingReflection.answers });
-    } else if (template) {
-      const initial: Record<string, string | number> = {};
-      template.questions.forEach((q) => {
-        if (q.type === 'number') {
-          initial[q.id] = q.min ?? 1;
-        } else {
-          initial[q.id] = '';
-        }
-      });
-      setAnswers(initial);
-    }
-  }, [existingReflection, template]);
+  const [answers, setAnswers] = useState<Record<string, string | number>>(() =>
+    createInitialAnswers(existingReflection, template)
+  );
 
   const handleSubmit = () => {
     if (!template) return;

@@ -126,6 +126,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ onOpenWeeklyReview }) => {
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <div style={{ marginBottom: 'var(--space-4)' }}>
         <div
+          className="task-board-toolbar"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -136,7 +137,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ onOpenWeeklyReview }) => {
         >
           <button
             onClick={goToPrevWeek}
-            className="font-caption"
+            className="font-caption task-board-toolbar-button"
             style={{
               background: 'none',
               border: '1px solid var(--border-primary)',
@@ -157,12 +158,12 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ onOpenWeeklyReview }) => {
           >
             {aloCopy.actions.prevWeek}
           </button>
-          <span className="font-h3" style={{ color: 'var(--accent-gold)' }}>
+          <span className="font-h3 task-board-range" style={{ color: 'var(--accent-gold)' }}>
             {format(new Date(weekStart), 'yyyy年M月d日')} — {format(addDays(new Date(weekStart), 6), 'M月d日')}
           </span>
           <button
             onClick={goToNextWeek}
-            className="font-caption"
+            className="font-caption task-board-toolbar-button"
             style={{
               background: 'none',
               border: '1px solid var(--border-primary)',
@@ -186,7 +187,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ onOpenWeeklyReview }) => {
           {!isCurrentWeek && (
             <button
               onClick={goToCurrentWeek}
-              className="font-caption"
+              className="font-caption task-board-toolbar-button"
               style={{
                 background: 'none',
                 border: '1px solid var(--accent-gold)',
@@ -201,7 +202,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ onOpenWeeklyReview }) => {
           )}
           <button
             onClick={() => onOpenWeeklyReview?.(weekStart)}
-            className="font-caption"
+            className="font-caption task-board-toolbar-button"
             style={{
               background: 'none',
               border: '1px solid var(--border-primary)',
@@ -233,6 +234,15 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ onOpenWeeklyReview }) => {
             paddingBottom: 'var(--space-2)',
           }}
         >
+          <TaskColumn
+            key="BACKLOG"
+            date="BACKLOG"
+            column="MON"
+            tasks={getDateTasks('BACKLOG')}
+            title="收纳箱"
+            dateLabel=""
+            isBacklog={true}
+          />
           {weekDates.map((date) => {
             const dayColumn = getDayColumnFromDate(new Date(date));
             return (
@@ -247,15 +257,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ onOpenWeeklyReview }) => {
               />
             );
           })}
-          <TaskColumn
-            key="BACKLOG"
-            date="BACKLOG"
-            column="MON"
-            tasks={getDateTasks('BACKLOG')}
-            title="收纳箱"
-            dateLabel=""
-            isBacklog={true}
-          />
           <OKRInboxColumn />
         </div>
       </div>

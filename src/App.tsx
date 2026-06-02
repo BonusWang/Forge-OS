@@ -29,6 +29,9 @@ const orbitStyleTokens = {
   '--font-mono': 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
 } as CSSProperties;
 
+const lastWordsMessage =
+  systemCopy.lastWords[Math.floor(Math.random() * systemCopy.lastWords.length)] ?? '';
+
 function App() {
   const [page, setPage] = useState<'dashboard' | 'reflection' | 'weeklyReview' | 'system'>('dashboard');
   const [weeklyReviewWeekStart, setWeeklyReviewWeekStart] = useState('');
@@ -97,7 +100,7 @@ function App() {
 
   return (
     <div
-      className={isOrbitStyle ? 'orbit-style-shell' : ''}
+      className={`app-shell${isOrbitStyle ? ' orbit-style-shell' : ''}`}
       data-visual-style={visualStyle}
       style={{
         minHeight: '100vh',
@@ -144,7 +147,7 @@ function App() {
           />
           <span className="app-brand-text notranslate" translate="no">
             <span className="app-brand-name" lang="en" translate="no">
-              Forge
+              Forge-OS
             </span>
             <span className="app-brand-slogan" translate="no">
               Forge yourself —— 自己锻造自己
@@ -152,6 +155,7 @@ function App() {
           </span>
         </div>
         <div
+          className="app-nav-actions"
           style={{
             display: 'flex',
             gap: 'var(--space-3)',
@@ -162,7 +166,7 @@ function App() {
         >
           <button
             onClick={() => setPage('dashboard')}
-            className="font-h2"
+            className="font-h2 app-nav-button"
             aria-current={page === 'dashboard' ? 'page' : undefined}
             title={aloCopy.nav.dashboardHover}
             style={{
@@ -184,11 +188,11 @@ function App() {
                 page === 'dashboard' ? 'var(--accent-gold)' : 'var(--text-secondary)';
             }}
           >
-            {isOrbitStyle ? '周看板' : page === 'dashboard' ? '[周看板]' : ' 周看板 '}
+            {page === 'dashboard' ? '[周看板]' : ' 周看板 '}
           </button>
           <button
             onClick={() => setPage('reflection')}
-            className="font-h2"
+            className="font-h2 app-nav-button"
             aria-current={page === 'reflection' ? 'page' : undefined}
             title={aloCopy.nav.reflectionHover}
             style={{
@@ -210,14 +214,14 @@ function App() {
                 page === 'reflection' ? 'var(--accent-gold)' : 'var(--text-secondary)';
             }}
           >
-            {isOrbitStyle ? '反思库' : page === 'reflection' ? '[反思库]' : ' 反思库 '}
+            {page === 'reflection' ? '[反思库]' : ' 反思库 '}
           </button>
           <button
             onClick={() => {
               setWeeklyReviewWeekStart('');
               setPage('weeklyReview');
             }}
-            className="font-h2"
+            className="font-h2 app-nav-button"
             aria-current={page === 'weeklyReview' ? 'page' : undefined}
             style={{
               background: 'none',
@@ -238,11 +242,11 @@ function App() {
                 page === 'weeklyReview' ? 'var(--accent-gold)' : 'var(--text-secondary)';
             }}
           >
-            {isOrbitStyle ? '周复盘' : page === 'weeklyReview' ? '[周复盘]' : ' 周复盘 '}
+            {page === 'weeklyReview' ? '[周复盘]' : ' 周复盘 '}
           </button>
           <button
             onClick={() => setPage('system')}
-            className="font-h2"
+            className="font-h2 app-nav-button"
             aria-current={page === 'system' ? 'page' : undefined}
             style={{
               background: 'none',
@@ -264,7 +268,7 @@ function App() {
             }}
             title={aloCopy.nav.systemHover}
           >
-            {isOrbitStyle ? '◇ 系统' : page === 'system' ? '[◇ 系统]' : ' ◇ 系统 '}
+            {page === 'system' ? '[◇ 系统]' : ' ◇ 系统 '}
             {hasUpdate && (
               <span style={{ color: 'var(--accent-danger)', marginLeft: 4 }}>
                 {systemCopy.nav.hasUpdateMarker}
@@ -273,7 +277,7 @@ function App() {
           </button>
           <button
             onClick={toggleVisualStyle}
-            className="font-h2"
+            className="font-h2 app-nav-button"
             aria-pressed={isOrbitStyle}
             style={{
               background: 'none',
@@ -300,7 +304,7 @@ function App() {
           </button>
           <button
             onClick={() => setModulePickerOpen(true)}
-            className="font-h2"
+            className="font-h2 app-nav-button"
             style={{
               background: 'none',
               border: 'none',
@@ -323,7 +327,7 @@ function App() {
 
           <button
             onClick={toggleTheme}
-            className="font-h2"
+            className="font-h2 app-nav-button"
             style={{
               background: 'none',
               border: 'none',
@@ -349,25 +353,23 @@ function App() {
       <ModulePicker isOpen={modulePickerOpen} onClose={() => setModulePickerOpen(false)} />
 
       {/* Page Content */}
-      <main style={{ padding: 'var(--space-6)' }}>
+      <main className="app-main" style={{ padding: 'var(--space-6)' }}>
         {page === 'dashboard' && (
           <Dashboard
-            visualStyle={visualStyle}
             onOpenWeeklyReview={(weekStart) => {
               setWeeklyReviewWeekStart(weekStart);
               setPage('weeklyReview');
             }}
           />
         )}
-        {page === 'reflection' && <Reflection visualStyle={visualStyle} />}
+        {page === 'reflection' && <Reflection />}
         {page === 'weeklyReview' && (
           <WeeklyReview
             key={weeklyReviewWeekStart || 'current-week'}
-            visualStyle={visualStyle}
             initialWeekStart={weeklyReviewWeekStart}
           />
         )}
-        {page === 'system' && <System visualStyle={visualStyle} />}
+        {page === 'system' && <System />}
       </main>
 
       <style>{`
@@ -458,10 +460,6 @@ function App() {
           font-size: 12px;
         }
 
-        .orbit-style-shell .app-brand img {
-          display: none;
-        }
-
         .orbit-style-shell nav button {
           min-height: 34px;
           border: 1px solid transparent !important;
@@ -514,106 +512,6 @@ function App() {
           font-size: 12px;
         }
 
-        .orbit-page {
-          max-width: 1440px;
-          margin: 0 auto;
-          width: 100%;
-        }
-
-        .orbit-page-header {
-          margin: 0 auto 32px;
-          max-width: 1440px;
-          padding: 32px 0 0;
-        }
-
-        .orbit-page-copy {
-          max-width: 760px;
-          margin: 0 auto 28px;
-          text-align: center;
-        }
-
-        .orbit-eyebrow {
-          color: var(--accent-gold);
-          font-family: var(--font-sans);
-          font-size: 12px;
-          font-weight: 700;
-          letter-spacing: 0;
-          margin-bottom: 6px;
-        }
-
-        .orbit-page-title {
-          color: var(--text-primary);
-          font-family: var(--font-display);
-          font-size: 46px;
-          font-weight: 700;
-          letter-spacing: 0;
-          line-height: 0.98;
-          margin: 0 0 12px;
-        }
-
-        .orbit-page-summary {
-          color: var(--text-secondary);
-          font-family: var(--font-sans);
-          font-size: 15px;
-          line-height: 1.7;
-          margin: 0 auto;
-          max-width: 660px;
-        }
-
-        .orbit-kpi-strip {
-          display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 12px;
-        }
-
-        .orbit-kpi-card {
-          min-height: 108px;
-          border: 1px solid var(--border-primary);
-          border-radius: 8px;
-          background: var(--bg-secondary);
-          padding: 16px;
-        }
-
-        .orbit-kpi-label {
-          color: var(--text-muted);
-          font-size: 12px;
-          font-weight: 600;
-          margin-bottom: 8px;
-        }
-
-        .orbit-kpi-value {
-          color: var(--text-primary);
-          font-family: var(--font-display);
-          font-size: 34px;
-          font-weight: 700;
-          line-height: 1;
-        }
-
-        .orbit-kpi-detail {
-          color: var(--text-secondary);
-          font-size: 12px;
-          margin-top: 8px;
-        }
-
-        .orbit-kpi-card[data-tone="orange"] .orbit-kpi-value { color: var(--accent-gold); }
-        .orbit-kpi-card[data-tone="green"] .orbit-kpi-value { color: var(--accent-success); }
-        .orbit-kpi-card[data-tone="yellow"] .orbit-kpi-value { color: #c9982e; }
-        .orbit-kpi-card[data-tone="red"] .orbit-kpi-value { color: var(--accent-danger); }
-
-        .orbit-board-section,
-        .orbit-content-section {
-          max-width: 1440px;
-          margin: 0 auto 24px;
-        }
-
-        .orbit-style-shell .dashboard-layout,
-        .orbit-style-shell .reflection-grid,
-        .orbit-style-shell .system-layout {
-          max-width: 1440px !important;
-          gap: 24px !important;
-          width: 100%;
-        }
-
         .orbit-style-shell .ascii-box {
           overflow: hidden;
           border-radius: 8px;
@@ -638,18 +536,7 @@ function App() {
           white-space: normal;
         }
 
-        .orbit-style-shell .ascii-box-content {
-          padding: 18px;
-        }
-
-        .orbit-style-shell .task-board-scroll {
-          gap: 12px !important;
-          padding: 4px 0 14px !important;
-        }
-
         .orbit-style-shell .task-column {
-          min-width: 220px !important;
-          flex: 1 0 220px !important;
           border: 1px solid var(--border-primary) !important;
           border-radius: 8px;
           background-color: var(--bg-secondary) !important;
@@ -658,12 +545,6 @@ function App() {
 
         .orbit-style-shell .task-column-header {
           background: rgba(250, 247, 242, 0.78) !important;
-          text-align: left !important;
-        }
-
-        .orbit-style-shell .task-column-content {
-          min-height: 220px !important;
-          padding: 12px !important;
         }
 
         .orbit-style-shell .task-column-footer {
@@ -674,8 +555,6 @@ function App() {
           border-radius: 8px;
           background-color: #faf7f2 !important;
           border-color: var(--border-primary) !important;
-          margin-bottom: 8px;
-          padding: 4px 10px;
         }
 
         .orbit-style-shell .task-card:hover {
@@ -703,12 +582,6 @@ function App() {
           color: var(--accent-gold) !important;
         }
 
-        @media (max-width: 1023px) {
-          .orbit-kpi-strip {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-        }
-
         @media (max-width: 767px) {
           .orbit-style-shell main {
             padding: 20px 14px 40px !important;
@@ -718,11 +591,14 @@ function App() {
             height: auto !important;
             min-height: 60px;
             padding: 10px 12px !important;
+            flex-wrap: wrap !important;
             align-items: flex-start !important;
+            justify-content: flex-start !important;
             gap: 10px;
           }
 
           .orbit-style-shell .app-brand {
+            width: 100%;
             font-size: 22px;
           }
 
@@ -731,11 +607,8 @@ function App() {
           }
 
           .orbit-style-shell .app-nav > div:last-child {
+            width: 100%;
             padding-bottom: 2px;
-          }
-
-          .orbit-page-title {
-            font-size: 36px;
           }
 
           .orbit-style-shell .reflection-grid,
@@ -747,12 +620,6 @@ function App() {
 
           .weekly-review-layout {
             grid-template-columns: 1fr !important;
-          }
-        }
-
-        @media (max-width: 479px) {
-          .orbit-kpi-strip {
-            grid-template-columns: 1fr;
           }
         }
       `}</style>
@@ -779,7 +646,7 @@ function App() {
           pointerEvents: 'none',
         }}
       >
-        {systemCopy.lastWords[Math.floor(Math.random() * systemCopy.lastWords.length)]}
+        {lastWordsMessage}
       </div>
     </div>
   );

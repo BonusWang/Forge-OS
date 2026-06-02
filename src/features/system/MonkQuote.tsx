@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import AsciiBox from '../../components/AsciiBox';
 import { getDailyQuote, type Quote } from '../../copy/monkQuotes';
 import { systemCopy } from '../../copy/system-copy';
@@ -10,13 +10,7 @@ const LEVEL_COLORS: Record<number, string> = {
 };
 
 const MonkQuote: React.FC = () => {
-  const [quote, setQuote] = useState<Quote | null>(null);
-
-  useEffect(() => {
-    setQuote(getDailyQuote());
-  }, []);
-
-  if (!quote) return null;
+  const [quote] = useState<Quote>(() => getDailyQuote());
 
   return (
     <AsciiBox title={systemCopy.quoteTitle}>
@@ -48,7 +42,7 @@ const MonkQuote: React.FC = () => {
             userSelect: 'none',
           }}
         >
-          —— Forge
+          —— Forge-OS
         </div>
       </div>
     </AsciiBox>

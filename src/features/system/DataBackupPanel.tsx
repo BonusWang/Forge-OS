@@ -2,18 +2,13 @@ import React, { useRef, useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import AsciiBox from '../../components/AsciiBox';
 import { systemCopy } from '../../copy/system-copy';
-import { aloCopy } from '../../copy/alo-copy';
 
-const DataBackupRitual: React.FC = () => {
+const DataBackupPanel: React.FC = () => {
   const store = useAppStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importStatus, setImportStatus] = useState<string>('');
-  const [sepiaActive, setSepiaActive] = useState(false);
 
   const handleExport = () => {
-    setSepiaActive(true);
-    setTimeout(() => setSepiaActive(false), 1200);
-
     const data = {
       tasks: store.tasks,
       calendarEvents: store.calendarEvents,
@@ -32,10 +27,7 @@ const DataBackupRitual: React.FC = () => {
       reflectionTemplates: store.reflectionTemplates,
       __version: store.__version ?? '0.1.1',
     };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: 'application/json',
-    });
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -44,7 +36,6 @@ const DataBackupRitual: React.FC = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
     setImportStatus(systemCopy.backup.exportSuccess);
     setTimeout(() => setImportStatus(''), 2000);
   };
@@ -68,7 +59,7 @@ const DataBackupRitual: React.FC = () => {
         ];
         const missing = requiredKeys.filter((k) => !(k in json));
         if (missing.length > 0) {
-          setImportStatus(aloCopy.errors.importFailed);
+          setImportStatus(systemCopy.backup.importFailed);
           return;
         }
 
@@ -95,7 +86,7 @@ const DataBackupRitual: React.FC = () => {
           window.location.reload();
         }, 800);
       } catch {
-        setImportStatus(aloCopy.errors.importFailed);
+        setImportStatus(systemCopy.backup.importFailed);
       }
     };
     reader.readAsText(file);
@@ -113,10 +104,7 @@ const DataBackupRitual: React.FC = () => {
           gap: 'var(--space-3)',
         }}
       >
-        <div
-          className="font-caption"
-          style={{ color: 'var(--text-muted)' }}
-        >
+        <div className="font-caption" style={{ color: 'var(--text-muted)' }}>
           {systemCopy.backup.sepiaHint}
         </div>
 
@@ -132,8 +120,6 @@ const DataBackupRitual: React.FC = () => {
               fontFamily: 'var(--font-mono)',
               textTransform: 'uppercase',
               padding: 'var(--space-1) var(--space-3)',
-              filter: sepiaActive ? 'sepia(1)' : 'none',
-              transition: 'filter 600ms var(--ease-confirm)',
             }}
           >
             [ {systemCopy.backup.exportButton} ]
@@ -175,4 +161,4 @@ const DataBackupRitual: React.FC = () => {
   );
 };
 
-export default DataBackupRitual;
+export default DataBackupPanel;

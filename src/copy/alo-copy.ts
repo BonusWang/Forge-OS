@@ -40,7 +40,7 @@ export const aloCopy = {
   // ── Brand Slogans ──
   slogans: {
     primary: "在黑暗中，金箔是最谦卑的荣耀。",
-    secondary: "Forge — Forge yourself —— 自己锻造自己。",
+    secondary: "Forge-OS — Forge yourself —— 自己锻造自己。",
   },
 
   // ── Navigation Hover Titles ──
@@ -60,8 +60,8 @@ export const aloCopy = {
     add: "+ 加一个",
     delete: "× 删掉",
     checkUpdate: "打听一下",
-    exportData: "封存罪证",
-    importData: "展开旧账",
+    exportData: "导出数据",
+    importData: "导入数据",
     goBack: "< 溜了",
     goNext: "冲 >",
     currentWeek: "回到现实",

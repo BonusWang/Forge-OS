@@ -13,6 +13,8 @@ const QUESTION_TYPE_LABELS: Record<ReflectionQuestion['type'], string> = {
   select: '选择',
 };
 
+const createQuestionId = () => `q-${Math.random().toString(36).substring(2, 7)}`;
+
 const TemplateEditor: React.FC<TemplateEditorProps> = ({ isOpen, onClose }) => {
   const templates = useAppStore((s) => s.reflectionTemplates);
   const addTemplate = useAppStore((s) => s.addTemplate);
@@ -47,7 +49,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ isOpen, onClose }) => {
   const handleAddQuestion = () => {
     if (!editingTemplate || !newQuestion.label?.trim()) return;
     const question: ReflectionQuestion = {
-      id: `q-${Math.random().toString(36).substring(2, 7)}`,
+      id: createQuestionId(),
       label: newQuestion.label.trim(),
       type: newQuestion.type || 'text',
       required: newQuestion.required || false,

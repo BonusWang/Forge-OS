@@ -14,20 +14,20 @@ export const systemCopy = {
   },
 
   backup: {
-    title: '数据仪式',
-    exportButton: '封存罪证',
-    importButton: '展开旧账',
-    exportSuccess: '卷轴已封存。你的黑历史现在安全地躺在硬盘里了。',
-    importSuccess: '旧账已展开，即将刷新… 希望过去的你没给自己埋雷。',
-    importFailed: '卷轴破损，无法辨识。你是不是又在导入表情包？',
-    sepiaHint: '点击封存，羊皮卷将缓缓卷起，就像你的耐心一样。',
+    title: '数据备份',
+    exportButton: '导出数据',
+    importButton: '导入数据',
+    exportSuccess: '数据已导出。你的本地记录现在有了一份备份。',
+    importSuccess: '数据已导入，即将刷新…',
+    importFailed: '数据导入失败。请确认文件格式正确。',
+    sepiaHint: '导出或导入本地数据，入口统一放在系统页面。',
   },
 
   about: {
-    title: '关于 Forge',
-    appName: 'Forge',
-    description: '一个面向个人成长的生活管理系统。Forge yourself —— 自己锻造自己。',
-    author: 'Forge Contributors',
+    title: '关于 Forge-OS',
+    appName: 'Forge-OS',
+    description: '一个面向个人目标确认与成长复盘的生活管理系统。Forge yourself —— 自己锻造自己。',
+    author: 'Forge-OS Contributors',
     license: 'MIT',
   },
 
