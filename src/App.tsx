@@ -12,6 +12,8 @@ import { systemCopy } from './copy/system-copy';
 import { aloCopy } from './copy/alo-copy';
 import { resources } from './utils/assets';
 
+type VisualStyle = 'classic' | 'orbit' | 'supabase';
+
 const orbitStyleTokens = {
   '--bg-primary': '#faf7f2',
   '--bg-secondary': '#ffffff',
@@ -29,13 +31,30 @@ const orbitStyleTokens = {
   '--font-mono': 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
 } as CSSProperties;
 
+const supabaseStyleTokens = {
+  '--bg-primary': '#0f0f0f',
+  '--bg-secondary': '#171717',
+  '--bg-tertiary': '#202020',
+  '--text-primary': '#fafafa',
+  '--text-secondary': '#b7b7b7',
+  '--text-muted': '#737373',
+  '--accent-gold': '#3ecf8e',
+  '--accent-success': '#3ecf8e',
+  '--accent-danger': '#ff7b72',
+  '--border-primary': '#2f2f2f',
+  '--border-hover': '#3ecf8e',
+  '--font-display': 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  '--font-sans': 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  '--font-mono': 'JetBrains Mono, "Source Code Pro", Consolas, monospace',
+} as CSSProperties;
+
 const lastWordsMessage =
   systemCopy.lastWords[Math.floor(Math.random() * systemCopy.lastWords.length)] ?? '';
 
 function App() {
   const [page, setPage] = useState<'dashboard' | 'reflection' | 'weeklyReview' | 'system'>('dashboard');
   const [weeklyReviewWeekStart, setWeeklyReviewWeekStart] = useState('');
-  const [visualStyle, setVisualStyle] = useState<'classic' | 'orbit'>('classic');
+  const [visualStyle, setVisualStyle] = useState<VisualStyle>('classic');
   const [modulePickerOpen, setModulePickerOpen] = useState(false);
   const [hasUpdate, setHasUpdate] = useState(false);
   const config = useAppStore((s) => s.config);
@@ -87,8 +106,21 @@ function App() {
   }, []);
 
   const isOrbitStyle = visualStyle === 'orbit';
+  const isSupabaseStyle = visualStyle === 'supabase';
+  const activeStyleTokens =
+    visualStyle === 'orbit'
+      ? orbitStyleTokens
+      : visualStyle === 'supabase'
+        ? supabaseStyleTokens
+        : {};
+  const visualStyleLabel =
+    visualStyle === 'orbit' ? 'Orbit' : visualStyle === 'supabase' ? 'Supabase' : '复古';
   const toggleVisualStyle = () => {
-    setVisualStyle((style) => (style === 'orbit' ? 'classic' : 'orbit'));
+    setVisualStyle((style) => {
+      if (style === 'classic') return 'orbit';
+      if (style === 'orbit') return 'supabase';
+      return 'classic';
+    });
   };
 
   useEffect(() => {
@@ -100,284 +132,143 @@ function App() {
 
   return (
     <div
-      className={`app-shell${isOrbitStyle ? ' orbit-style-shell' : ''}`}
+      className={`app-shell${isOrbitStyle ? ' orbit-style-shell' : ''}${isSupabaseStyle ? ' supabase-style-shell' : ''}`}
       data-visual-style={visualStyle}
       style={{
         minHeight: '100vh',
         backgroundColor: 'var(--bg-primary)',
         color: 'var(--text-primary)',
         fontFamily: "var(--font-mono)",
-        ...(isOrbitStyle ? orbitStyleTokens : {}),
+        ...activeStyleTokens,
       }}
     >
-      {/* Navigation Bar */}
-      <nav
-        className="app-nav"
-        style={{
-          height: '48px',
-          borderBottom: '1px solid var(--border-primary)',
-          padding: '0 32px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          backgroundColor: 'var(--bg-primary)',
-        }}
-      >
-        <div
-          className="font-display app-brand notranslate"
-          translate="no"
-          style={{
-            color: 'var(--text-primary)',
-            userSelect: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-2)',
-            flexShrink: 0,
-          }}
-        >
-          <img
-            src={resources.logoPixel}
-            alt=""
-            style={{
-              height: '28px',
-              width: 'auto',
-              imageRendering: 'pixelated',
-              opacity: 0.9,
-            }}
-          />
-          <span className="app-brand-text notranslate" translate="no">
-            <span className="app-brand-name" lang="en" translate="no">
-              Forge-OS
-            </span>
-            <span className="app-brand-slogan" translate="no">
-              Forge yourself —— 自己锻造自己
-            </span>
-          </span>
-        </div>
-        <div
-          className="app-nav-actions"
-          style={{
-            display: 'flex',
-            gap: 'var(--space-3)',
-            minWidth: 0,
-            overflowX: 'auto',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          <button
-            onClick={() => setPage('dashboard')}
-            className="font-h2 app-nav-button"
-            aria-current={page === 'dashboard' ? 'page' : undefined}
-            title={aloCopy.nav.dashboardHover}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: page === 'dashboard' ? 'var(--accent-gold)' : 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-mono)',
-              padding: 'var(--space-1) var(--space-2)',
-              transition: `color var(--duration-instant) var(--ease-instant)`,
-            }}
-            onMouseEnter={(e) => {
-              if (page !== 'dashboard') {
-                e.currentTarget.style.color = 'var(--text-primary)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color =
-                page === 'dashboard' ? 'var(--accent-gold)' : 'var(--text-secondary)';
-            }}
-          >
-            {page === 'dashboard' ? '[周看板]' : ' 周看板 '}
-          </button>
-          <button
-            onClick={() => setPage('reflection')}
-            className="font-h2 app-nav-button"
-            aria-current={page === 'reflection' ? 'page' : undefined}
-            title={aloCopy.nav.reflectionHover}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: page === 'reflection' ? 'var(--accent-gold)' : 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-mono)',
-              padding: 'var(--space-1) var(--space-2)',
-              transition: `color var(--duration-instant) var(--ease-instant)`,
-            }}
-            onMouseEnter={(e) => {
-              if (page !== 'reflection') {
-                e.currentTarget.style.color = 'var(--text-primary)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color =
-                page === 'reflection' ? 'var(--accent-gold)' : 'var(--text-secondary)';
-            }}
-          >
-            {page === 'reflection' ? '[反思库]' : ' 反思库 '}
-          </button>
-          <button
-            onClick={() => {
-              setWeeklyReviewWeekStart('');
-              setPage('weeklyReview');
-            }}
-            className="font-h2 app-nav-button"
-            aria-current={page === 'weeklyReview' ? 'page' : undefined}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: page === 'weeklyReview' ? 'var(--accent-gold)' : 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-mono)',
-              padding: 'var(--space-1) var(--space-2)',
-              transition: `color var(--duration-instant) var(--ease-instant)`,
-            }}
-            onMouseEnter={(e) => {
-              if (page !== 'weeklyReview') {
-                e.currentTarget.style.color = 'var(--text-primary)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color =
-                page === 'weeklyReview' ? 'var(--accent-gold)' : 'var(--text-secondary)';
-            }}
-          >
-            {page === 'weeklyReview' ? '[周复盘]' : ' 周复盘 '}
-          </button>
-          <button
-            onClick={() => setPage('system')}
-            className="font-h2 app-nav-button"
-            aria-current={page === 'system' ? 'page' : undefined}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: page === 'system' ? 'var(--accent-gold)' : 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-mono)',
-              padding: 'var(--space-1) var(--space-2)',
-              transition: `color var(--duration-instant) var(--ease-instant)`,
-            }}
-            onMouseEnter={(e) => {
-              if (page !== 'system') {
-                e.currentTarget.style.color = 'var(--text-primary)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color =
-                page === 'system' ? 'var(--accent-gold)' : 'var(--text-secondary)';
-            }}
-            title={aloCopy.nav.systemHover}
-          >
-            {page === 'system' ? '[◇ 系统]' : ' ◇ 系统 '}
-            {hasUpdate && (
-              <span style={{ color: 'var(--accent-danger)', marginLeft: 4 }}>
-                {systemCopy.nav.hasUpdateMarker}
+      <div className="app-frame">
+        <aside className="app-rail" aria-label="Forge-OS navigation">
+          <div className="app-rail-brand font-display notranslate" translate="no">
+            <img src={resources.logoPixel} alt="" className="app-brand-mark" />
+            <span className="app-brand-text notranslate" translate="no">
+              <span className="app-brand-name" lang="en" translate="no">
+                Forge-OS
               </span>
+              <span className="app-brand-slogan" translate="no">
+                Forge yourself
+              </span>
+            </span>
+          </div>
+
+          <div className="app-rail-section" aria-label="页面">
+            <button
+              type="button"
+              onClick={() => setPage('dashboard')}
+              className="app-rail-button"
+              aria-current={page === 'dashboard' ? 'page' : undefined}
+              title={aloCopy.nav.dashboardHover}
+            >
+              <span className="app-rail-index">01</span>
+              <span className="app-rail-label">周看板</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setWeeklyReviewWeekStart('');
+                setPage('weeklyReview');
+              }}
+              className="app-rail-button"
+              aria-current={page === 'weeklyReview' ? 'page' : undefined}
+            >
+              <span className="app-rail-index">02</span>
+              <span className="app-rail-label">周复盘</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage('reflection')}
+              className="app-rail-button"
+              aria-current={page === 'reflection' ? 'page' : undefined}
+              title={aloCopy.nav.reflectionHover}
+            >
+              <span className="app-rail-index">03</span>
+              <span className="app-rail-label">反思库</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage('system')}
+              className="app-rail-button"
+              aria-current={page === 'system' ? 'page' : undefined}
+              title={aloCopy.nav.systemHover}
+            >
+              <span className="app-rail-index">04</span>
+              <span className="app-rail-label">系统</span>
+              {hasUpdate && <span className="app-rail-badge">{systemCopy.nav.hasUpdateMarker}</span>}
+            </button>
+          </div>
+
+          <div className="app-rail-section app-rail-section--tools" aria-label="工具">
+            <button
+              type="button"
+              onClick={toggleVisualStyle}
+              className="app-rail-button"
+              aria-pressed={visualStyle !== 'classic'}
+              title={`当前风格：${visualStyleLabel}。点击切换复古、Orbit、Supabase 风格`}
+            >
+              <span className="app-rail-index">
+                {visualStyle === 'supabase' ? 'S' : visualStyle === 'orbit' ? 'O' : '◇'}
+              </span>
+              <span className="app-rail-label">风格</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setModulePickerOpen(true)}
+              className="app-rail-button"
+              title={aloCopy.nav.moduleHover}
+            >
+              <span className="app-rail-index">⊕</span>
+              <span className="app-rail-label">模块</span>
+            </button>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="app-rail-button"
+              title={aloCopy.nav.themeHover}
+            >
+              <span className="app-rail-index">{config.theme === 'dark' ? '◐' : '◑'}</span>
+              <span className="app-rail-label">主题</span>
+            </button>
+          </div>
+        </aside>
+
+        <div className="app-content-frame">
+          <ModulePicker isOpen={modulePickerOpen} onClose={() => setModulePickerOpen(false)} />
+
+          <main className="app-main">
+            {page === 'dashboard' && (
+              <Dashboard />
             )}
-          </button>
-          <button
-            onClick={toggleVisualStyle}
-            className="font-h2 app-nav-button"
-            aria-pressed={isOrbitStyle}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: isOrbitStyle ? 'var(--accent-gold)' : 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-mono)',
-              padding: 'var(--space-1) var(--space-2)',
-              transition: `color var(--duration-instant) var(--ease-instant)`,
-            }}
-            onMouseEnter={(e) => {
-              if (!isOrbitStyle) {
-                e.currentTarget.style.color = 'var(--text-primary)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = isOrbitStyle
-                ? 'var(--accent-gold)'
-                : 'var(--text-secondary)';
-            }}
-            title="切换原风格与 orbit-general 参考风格"
-          >
-            [◇ 风格切换]
-          </button>
-          <button
-            onClick={() => setModulePickerOpen(true)}
-            className="font-h2 app-nav-button"
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-mono)',
-              padding: 'var(--space-1) var(--space-2)',
-              transition: `color var(--duration-instant) var(--ease-instant)`,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'var(--text-primary)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'var(--text-secondary)';
-            }}
-            title={aloCopy.nav.moduleHover}
-          >
-            [⊕ 模块]
-          </button>
-
-          <button
-            onClick={toggleTheme}
-            className="font-h2 app-nav-button"
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-mono)',
-              padding: 'var(--space-1) var(--space-2)',
-              transition: `color var(--duration-instant) var(--ease-instant)`,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'var(--text-primary)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'var(--text-secondary)';
-            }}
-            title={aloCopy.nav.themeHover}
-          >
-            {config.theme === 'dark' ? '[◐]' : '[◑]'}
-          </button>
+            {page === 'reflection' && <Reflection />}
+            {page === 'weeklyReview' && (
+              <WeeklyReview
+                key={weeklyReviewWeekStart || 'current-week'}
+                initialWeekStart={weeklyReviewWeekStart}
+              />
+            )}
+            {page === 'system' && <System />}
+          </main>
         </div>
-      </nav>
-
-      <ModulePicker isOpen={modulePickerOpen} onClose={() => setModulePickerOpen(false)} />
-
-      {/* Page Content */}
-      <main className="app-main" style={{ padding: 'var(--space-6)' }}>
-        {page === 'dashboard' && (
-          <Dashboard
-            onOpenWeeklyReview={(weekStart) => {
-              setWeeklyReviewWeekStart(weekStart);
-              setPage('weeklyReview');
-            }}
-          />
-        )}
-        {page === 'reflection' && <Reflection />}
-        {page === 'weeklyReview' && (
-          <WeeklyReview
-            key={weeklyReviewWeekStart || 'current-week'}
-            initialWeekStart={weeklyReviewWeekStart}
-          />
-        )}
-        {page === 'system' && <System />}
-      </main>
+      </div>
 
       <style>{`
         body[data-alo-visual-style="orbit"] {
           background-color: #faf7f2;
         }
 
+        body[data-alo-visual-style="supabase"] {
+          background-color: #0f0f0f;
+        }
+
         body[data-alo-visual-style="orbit"]::before {
+          opacity: 0;
+        }
+
+        body[data-alo-visual-style="supabase"]::before {
           opacity: 0;
         }
 
@@ -401,9 +292,36 @@ function App() {
           font-variant-numeric: tabular-nums;
         }
 
-        .orbit-style-shell main {
+        .supabase-style-shell {
+          --bg-primary: #0f0f0f;
+          --bg-secondary: #171717;
+          --bg-tertiary: #202020;
+          --text-primary: #fafafa;
+          --text-secondary: #b7b7b7;
+          --text-muted: #737373;
+          --accent-gold: #3ecf8e;
+          --accent-success: #3ecf8e;
+          --accent-danger: #ff7b72;
+          --border-primary: #2f2f2f;
+          --border-hover: #3ecf8e;
+          --font-display: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          --font-mono: "JetBrains Mono", "Source Code Pro", Consolas, monospace;
+          background-color: var(--bg-primary) !important;
+          color: var(--text-primary) !important;
+          font-variant-numeric: tabular-nums;
+        }
+
+        .orbit-style-shell .app-main {
           background: transparent !important;
-          padding: 32px 32px 56px !important;
+          padding: var(--space-4) var(--space-5) var(--space-7) !important;
+        }
+
+        .supabase-style-shell .app-main {
+          background:
+            radial-gradient(circle at 18% 0%, rgba(62, 207, 142, 0.08), transparent 32%),
+            radial-gradient(circle at 82% 10%, rgba(62, 207, 142, 0.05), transparent 28%);
+          padding: var(--space-4) var(--space-5) var(--space-7) !important;
         }
 
         .app-brand-text {
@@ -434,14 +352,20 @@ function App() {
           white-space: nowrap;
         }
 
-        .orbit-style-shell .app-nav {
-          height: 64px !important;
-          padding: 0 32px !important;
-          background-color: rgba(250, 247, 242, 0.92) !important;
+        .orbit-style-shell .app-rail {
+          padding: 24px 16px !important;
+          background-color: rgba(255, 255, 255, 0.82) !important;
           backdrop-filter: saturate(120%) blur(10px);
         }
 
-        .orbit-style-shell .app-brand {
+        .supabase-style-shell .app-rail {
+          padding: 24px 16px !important;
+          background-color: rgba(10, 10, 10, 0.94) !important;
+          border-right-color: var(--border-primary);
+          backdrop-filter: saturate(120%) blur(14px);
+        }
+
+        .orbit-style-shell .app-rail-brand {
           color: var(--text-primary) !important;
           font-family: var(--font-display);
           font-size: 28px;
@@ -450,9 +374,23 @@ function App() {
           text-transform: none;
         }
 
+        .supabase-style-shell .app-rail-brand {
+          color: var(--text-primary) !important;
+          font-family: var(--font-display);
+          font-weight: 700;
+          letter-spacing: -0.01em;
+          text-transform: none;
+        }
+
         .orbit-style-shell .app-brand-name {
           font-family: var(--font-display);
           font-size: 28px;
+        }
+
+        .supabase-style-shell .app-brand-name {
+          font-family: var(--font-display);
+          font-size: 22px;
+          letter-spacing: -0.01em;
         }
 
         .orbit-style-shell .app-brand-slogan {
@@ -460,7 +398,13 @@ function App() {
           font-size: 12px;
         }
 
-        .orbit-style-shell nav button {
+        .supabase-style-shell .app-brand-slogan {
+          color: var(--text-muted);
+          font-family: var(--font-sans);
+          font-size: 12px;
+        }
+
+        .orbit-style-shell .app-rail-button {
           min-height: 34px;
           border: 1px solid transparent !important;
           border-radius: 8px;
@@ -475,17 +419,46 @@ function App() {
           text-transform: none;
         }
 
-        .orbit-style-shell nav button:hover {
+        .supabase-style-shell .app-rail-button {
+          min-height: 36px;
+          border: 1px solid transparent !important;
+          border-radius: 8px;
+          background: transparent !important;
+          color: var(--text-secondary) !important;
+          font-family: var(--font-sans) !important;
+          font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 0;
+          line-height: 1;
+          padding: 8px 10px !important;
+          text-transform: none;
+        }
+
+        .orbit-style-shell .app-rail-button:hover {
           border-color: var(--border-primary) !important;
           background: rgba(255, 255, 255, 0.62) !important;
           color: var(--text-primary) !important;
         }
 
-        .orbit-style-shell nav button[aria-current="page"],
-        .orbit-style-shell nav button[aria-pressed="true"] {
+        .supabase-style-shell .app-rail-button:hover {
           border-color: var(--border-primary) !important;
-          background: var(--bg-secondary) !important;
+          background: rgba(62, 207, 142, 0.08) !important;
+          color: var(--text-primary) !important;
+        }
+
+        .orbit-style-shell .app-rail-button[aria-current="page"],
+        .orbit-style-shell .app-rail-button[aria-pressed="true"] {
+          border-color: rgba(216, 106, 71, 0.28) !important;
+          background: rgba(216, 106, 71, 0.08) !important;
           color: var(--accent-gold) !important;
+        }
+
+        .supabase-style-shell .app-rail-button[aria-current="page"],
+        .supabase-style-shell .app-rail-button[aria-pressed="true"] {
+          border-color: rgba(62, 207, 142, 0.26) !important;
+          background: rgba(62, 207, 142, 0.1) !important;
+          color: var(--accent-gold) !important;
+          box-shadow: inset 0 0 0 1px rgba(62, 207, 142, 0.08);
         }
 
         .orbit-style-shell .font-display {
@@ -504,11 +477,38 @@ function App() {
           text-transform: none;
         }
 
+        .supabase-style-shell .font-display,
+        .supabase-style-shell .font-h1,
+        .supabase-style-shell .font-h2,
+        .supabase-style-shell .font-h3,
+        .supabase-style-shell .font-body,
+        .supabase-style-shell .font-caption {
+          letter-spacing: 0;
+          text-transform: none;
+        }
+
+        .supabase-style-shell .font-display,
+        .supabase-style-shell .font-h1,
+        .supabase-style-shell .font-h2,
+        .supabase-style-shell .font-h3 {
+          font-family: var(--font-display);
+        }
+
         .orbit-style-shell .font-body {
           font-size: 14px;
         }
 
+        .supabase-style-shell .font-body {
+          font-family: var(--font-sans);
+          font-size: 14px;
+        }
+
         .orbit-style-shell .font-caption {
+          font-size: 12px;
+        }
+
+        .supabase-style-shell .font-caption {
+          color: var(--text-muted);
           font-size: 12px;
         }
 
@@ -520,8 +520,20 @@ function App() {
           box-shadow: none;
         }
 
+        .supabase-style-shell .ascii-box {
+          overflow: hidden;
+          border-radius: 12px;
+          border-color: var(--border-primary);
+          background-color: rgba(23, 23, 23, 0.92);
+          box-shadow: none;
+        }
+
         .orbit-style-shell .ascii-box:hover {
           border-color: rgba(216, 106, 71, 0.5);
+        }
+
+        .supabase-style-shell .ascii-box:hover {
+          border-color: color-mix(in srgb, var(--accent-gold) 48%, var(--border-primary));
         }
 
         .orbit-style-shell .ascii-box-title {
@@ -536,6 +548,18 @@ function App() {
           white-space: normal;
         }
 
+        .supabase-style-shell .ascii-box-title {
+          border-bottom-color: var(--border-primary);
+          background: rgba(32, 32, 32, 0.72);
+          color: var(--accent-gold);
+          font-family: var(--font-display);
+          font-size: 16px;
+          font-weight: 700;
+          letter-spacing: -0.01em;
+          text-transform: none;
+          white-space: normal;
+        }
+
         .orbit-style-shell .task-column {
           border: 1px solid var(--border-primary) !important;
           border-radius: 8px;
@@ -543,12 +567,28 @@ function App() {
           overflow: hidden;
         }
 
+        .supabase-style-shell .task-column {
+          border: 1px solid var(--border-primary) !important;
+          border-radius: 12px;
+          background-color: rgba(23, 23, 23, 0.92) !important;
+          overflow: hidden;
+        }
+
         .orbit-style-shell .task-column-header {
           background: rgba(250, 247, 242, 0.78) !important;
         }
 
+        .supabase-style-shell .task-column-header {
+          background: rgba(32, 32, 32, 0.88) !important;
+          color: var(--accent-gold);
+        }
+
         .orbit-style-shell .task-column-footer {
           background: rgba(250, 247, 242, 0.46);
+        }
+
+        .supabase-style-shell .task-column-footer {
+          background: rgba(32, 32, 32, 0.52);
         }
 
         .orbit-style-shell .task-card {
@@ -557,12 +597,27 @@ function App() {
           border-color: var(--border-primary) !important;
         }
 
+        .supabase-style-shell .task-card {
+          border-radius: 8px;
+          background-color: #202020 !important;
+          border-color: var(--border-primary) !important;
+        }
+
         .orbit-style-shell .task-card:hover {
           background-color: var(--bg-secondary) !important;
           border-color: rgba(216, 106, 71, 0.5) !important;
         }
 
+        .supabase-style-shell .task-card:hover {
+          background-color: #252525 !important;
+          border-color: color-mix(in srgb, var(--accent-gold) 50%, var(--border-primary)) !important;
+        }
+
         .orbit-style-shell .alo-empty-state-image {
+          display: none !important;
+        }
+
+        .supabase-style-shell .alo-empty-state-image {
           display: none !important;
         }
 
@@ -575,6 +630,15 @@ function App() {
           outline-offset: 3px;
         }
 
+        .supabase-style-shell button:focus-visible,
+        .supabase-style-shell a:focus-visible,
+        .supabase-style-shell input:focus-visible,
+        .supabase-style-shell textarea:focus-visible,
+        .supabase-style-shell select:focus-visible {
+          outline: 2px solid rgba(62, 207, 142, 0.72);
+          outline-offset: 3px;
+        }
+
         .orbit-style-shell .btn-invert:hover,
         .orbit-style-shell .btn-invert:focus-visible {
           border-color: var(--accent-gold) !important;
@@ -582,12 +646,23 @@ function App() {
           color: var(--accent-gold) !important;
         }
 
+        .supabase-style-shell .btn-invert:hover,
+        .supabase-style-shell .btn-invert:focus-visible {
+          border-color: var(--accent-gold) !important;
+          background-color: rgba(62, 207, 142, 0.1) !important;
+          color: var(--accent-gold) !important;
+        }
+
         @media (max-width: 767px) {
-          .orbit-style-shell main {
+          .orbit-style-shell .app-main {
             padding: 20px 14px 40px !important;
           }
 
-          .orbit-style-shell .app-nav {
+          .supabase-style-shell .app-main {
+            padding: 20px 14px 40px !important;
+          }
+
+          .orbit-style-shell .app-rail {
             height: auto !important;
             min-height: 60px;
             padding: 10px 12px !important;
@@ -597,16 +672,36 @@ function App() {
             gap: 10px;
           }
 
-          .orbit-style-shell .app-brand {
+          .supabase-style-shell .app-rail {
+            height: auto !important;
+            min-height: 60px;
+            padding: 10px 12px !important;
+            flex-wrap: wrap !important;
+            align-items: flex-start !important;
+            justify-content: flex-start !important;
+            gap: 10px;
+          }
+
+          .orbit-style-shell .app-rail-brand {
             width: 100%;
             font-size: 22px;
+          }
+
+          .supabase-style-shell .app-rail-brand {
+            width: 100%;
+            font-size: 20px;
           }
 
           .app-brand-slogan {
             display: none;
           }
 
-          .orbit-style-shell .app-nav > div:last-child {
+          .orbit-style-shell .app-rail-section {
+            width: 100%;
+            padding-bottom: 2px;
+          }
+
+          .supabase-style-shell .app-rail-section {
             width: 100%;
             padding-bottom: 2px;
           }
@@ -614,6 +709,13 @@ function App() {
           .orbit-style-shell .reflection-grid,
           .orbit-style-shell .weekly-review-layout,
           .orbit-style-shell .system-layout {
+            grid-template-columns: 1fr !important;
+            flex-direction: column !important;
+          }
+
+          .supabase-style-shell .reflection-grid,
+          .supabase-style-shell .weekly-review-layout,
+          .supabase-style-shell .system-layout {
             grid-template-columns: 1fr !important;
             flex-direction: column !important;
           }

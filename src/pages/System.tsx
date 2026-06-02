@@ -9,31 +9,33 @@ const System: React.FC = () => {
   return (
     <div className="workspace-page system-page">
       <section className="system-layout workspace-grid workspace-grid--system">
-        <UpdatePanel />
+        <div className="system-column system-column--operations">
+          <UpdatePanel />
+          <DataBackupPanel />
+        </div>
 
-        <AsciiBox title={systemCopy.about.title}>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 'var(--space-3)',
-            }}
-          >
-            <div className="font-h2" style={{ color: 'var(--accent-gold)' }}>
-              {systemCopy.about.appName}
+        <div className="system-column system-column--identity">
+          <AsciiBox title={systemCopy.about.title}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--space-3)',
+              }}
+            >
+              <div className="font-h2" style={{ color: 'var(--accent-gold)' }}>
+                {systemCopy.about.appName}
+              </div>
+              <div className="font-body" style={{ color: 'var(--text-secondary)' }}>
+                {systemCopy.about.description}
+              </div>
+              <div className="font-caption" style={{ color: 'var(--text-muted)' }}>
+                {systemCopy.about.author} · {systemCopy.about.license}
+              </div>
             </div>
-            <div className="font-body" style={{ color: 'var(--text-secondary)' }}>
-              {systemCopy.about.description}
-            </div>
-            <div className="font-caption" style={{ color: 'var(--text-muted)' }}>
-              {systemCopy.about.author} · {systemCopy.about.license}
-            </div>
-          </div>
-        </AsciiBox>
-
-        <DataBackupPanel />
-
-        <MonkQuote />
+          </AsciiBox>
+          <MonkQuote />
+        </div>
       </section>
     </div>
   );

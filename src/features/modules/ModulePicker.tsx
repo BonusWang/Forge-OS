@@ -32,162 +32,77 @@ const ModulePicker: React.FC<ModulePickerProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   const modules = getAllModules();
+  const enabledCount = enabledModules.length;
 
   return (
     <div
       className="module-picker-overlay"
       ref={overlayRef}
       onClick={handleOverlayClick}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        backdropFilter: 'blur(2px)',
-        zIndex: 100,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        paddingTop: '64px',
-      }}
     >
       <div
         className="module-picker-panel"
-        style={{
-          backgroundColor: 'var(--bg-secondary)',
-          border: '1px solid var(--border-primary)',
-          padding: 'var(--space-5)',
-          minWidth: '320px',
-          maxWidth: '400px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-        }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="module-picker-title"
       >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 'var(--space-4)',
-            borderBottom: '1px solid var(--border-primary)',
-            paddingBottom: 'var(--space-3)',
-          }}
-        >
-          <span
-            className="font-h2"
-            style={{ color: 'var(--accent-gold)' }}
-          >
-            [ 模块管理 ]
-          </span>
+        <div className="module-picker-header">
+          <div>
+            <div className="font-h2 module-picker-title" id="module-picker-title">
+              模块管理
+            </div>
+            <div className="font-caption module-picker-count">
+              已启用 {enabledCount} / {modules.length}
+            </div>
+          </div>
           <button
+            type="button"
             onClick={onClose}
-            className="font-h2"
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-mono)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'var(--text-primary)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'var(--text-secondary)';
-            }}
+            className="module-picker-close"
+            aria-label="关闭模块管理"
           >
-            [✕]
+            ×
           </button>
         </div>
 
-        <div className="module-picker-list" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <div className="module-picker-list">
           {modules.map((mod) => {
             const isEnabled = enabledModules.includes(mod.id as ModuleId);
+            const zoneLabel = mod.defaultZone === 'main' ? '主区' : '侧栏';
             return (
-              <div
+              <button
+                type="button"
                 key={mod.id}
-                className="module-picker-row"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--space-3)',
-                  padding: 'var(--space-2) var(--space-3)',
-                  border: '1px solid transparent',
-                  transition: 'border-color var(--duration-instant) var(--ease-instant)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--border-primary)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'transparent';
-                }}
+                className={`module-picker-row${isEnabled ? ' is-enabled' : ''}`}
+                aria-pressed={isEnabled}
+                onClick={() => toggleModule(mod.id as ModuleId)}
               >
-                <span
-                  className="font-mono-data"
-                  style={{
-                    color: isEnabled ? 'var(--accent-gold)' : 'var(--text-secondary)',
-                    minWidth: '32px',
-                    textAlign: 'center',
-                    userSelect: 'none',
-                  }}
-                >
+                <span className="module-picker-icon" aria-hidden="true">
                   {mod.icon}
                 </span>
 
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    className="font-body"
-                    style={{
-                      color: isEnabled ? 'var(--text-primary)' : 'var(--text-secondary)',
-                    }}
-                  >
+                <span className="module-picker-copy">
+                  <span className="font-body module-picker-name">
                     {mod.name}
-                  </div>
-                  <div
-                    className="font-caption"
-                    style={{
-                      color: 'var(--text-secondary)',
-                      marginTop: '2px',
-                    }}
-                  >
+                  </span>
+                  <span className="font-caption module-picker-description">
                     {mod.description}
-                  </div>
-                </div>
+                  </span>
+                </span>
 
-                <button
-                  onClick={() => toggleModule(mod.id as ModuleId)}
-                  className="font-h2"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: isEnabled ? 'var(--accent-success)' : 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    fontFamily: 'var(--font-mono)',
-                    padding: 'var(--space-1)',
-                    transition: `color var(--duration-instant) var(--ease-instant)`,
-                    userSelect: 'none',
-                  }}
-                  title={isEnabled ? '点击隐藏' : '点击显示'}
-                >
-                  {isEnabled ? '[●]' : '[○]'}
-                </button>
-              </div>
+                <span className="module-picker-meta">
+                  <span className="module-picker-zone">{zoneLabel}</span>
+                  <span className="module-picker-state">{isEnabled ? '启用' : '隐藏'}</span>
+                </span>
+              </button>
             );
           })}
         </div>
 
-        <div
-          style={{
-            marginTop: 'var(--space-4)',
-            paddingTop: 'var(--space-3)',
-            borderTop: '1px solid var(--border-primary)',
-            textAlign: 'center',
-          }}
-        >
-          <span className="font-caption" style={{ color: 'var(--text-secondary)' }}>
-            启用的模块: {enabledModules.length} / {modules.length}
-          </span>
+        <div className="module-picker-footer">
+          <div className="module-picker-meter" aria-hidden="true">
+            <span style={{ width: `${(enabledCount / modules.length) * 100}%` }} />
+          </div>
         </div>
       </div>
     </div>

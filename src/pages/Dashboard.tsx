@@ -14,11 +14,7 @@ import { useAppStore } from '../store/useAppStore';
 import { useSarcasticMonologue } from '../hooks/useSarcasticMonologue';
 import type { ModuleId } from '../types';
 
-interface DashboardProps {
-  onOpenWeeklyReview?: (weekStart: string) => void;
-}
-
-const Dashboard: React.FC<DashboardProps> = ({ onOpenWeeklyReview }) => {
+const Dashboard: React.FC = () => {
   const enabledModules = useAppStore((s) => s.enabledModules);
   const isEnabled = (id: ModuleId) => enabledModules.includes(id);
   const { text: monologue } = useSarcasticMonologue();
@@ -42,39 +38,43 @@ const Dashboard: React.FC<DashboardProps> = ({ onOpenWeeklyReview }) => {
         </div>
       )}
 
-      <section className="dashboard-today-strip" aria-label="今日执行">
-        <AsciiBox title="今日进度" className="dashboard-status-card dashboard-status-card--progress">
-          <TodayProgress />
-        </AsciiBox>
+      <div className="dashboard-command-grid">
+        <div className="dashboard-primary-canvas">
+          <section className="dashboard-board-section" aria-label="本周任务看板">
+            <TaskBoard />
+          </section>
 
-        <AsciiBox title="每日反思" className="dashboard-status-card dashboard-status-card--reflection">
-          <ReflectionQuickEntry />
-        </AsciiBox>
+          <section className="dashboard-support-grid" aria-label="辅助沉淀">
+            {isEnabled('principles') && <PrinciplesPanel />}
 
-        {isEnabled('timeBlocks') && <TimeBlockPanel />}
+            {isEnabled('calendar') && (
+              <AsciiBox title="日历">
+                <MiniCalendar />
+              </AsciiBox>
+            )}
 
-        {isEnabled('mood') && <MoodTrackerPanel />}
-      </section>
+            {isEnabled('entertainment') && <EntertainmentPanel />}
 
-      <section className="dashboard-board-section" aria-label="本周任务看板">
-        <TaskBoard onOpenWeeklyReview={onOpenWeeklyReview} />
-      </section>
+            {isEnabled('habits') && <HabitTrackerPanel />}
 
-      <section className="dashboard-support-grid" aria-label="辅助沉淀">
-        {isEnabled('principles') && <PrinciplesPanel />}
+            {isEnabled('inspiration') && <InspirationVaultPanel />}
+          </section>
+        </div>
 
-        {isEnabled('calendar') && (
-          <AsciiBox title="日历">
-            <MiniCalendar />
+        <aside className="dashboard-side-panel" aria-label="今日执行">
+          <AsciiBox title="今日进度" className="dashboard-status-card dashboard-status-card--progress">
+            <TodayProgress />
           </AsciiBox>
-        )}
 
-        {isEnabled('entertainment') && <EntertainmentPanel />}
+          <AsciiBox title="每日反思" className="dashboard-status-card dashboard-status-card--reflection">
+            <ReflectionQuickEntry />
+          </AsciiBox>
 
-        {isEnabled('habits') && <HabitTrackerPanel />}
+          {isEnabled('timeBlocks') && <TimeBlockPanel />}
 
-        {isEnabled('inspiration') && <InspirationVaultPanel />}
-      </section>
+          {isEnabled('mood') && <MoodTrackerPanel />}
+        </aside>
+      </div>
 
     </div>
   );

@@ -199,7 +199,7 @@ const WeeklyReviewPage: React.FC<WeeklyReviewPageProps> = ({
         </AsciiBox>
 
         <div className="weekly-review-main-grid">
-          <AsciiBox title={`${weekStart} - ${periodEnd}`}>
+          <AsciiBox title={`${weekStart} - ${periodEnd}`} className="weekly-review-editor-box">
             <WeeklyReviewEditor
               key={`${weekStart}-${existingReview?.id ?? 'new'}`}
               periodStart={weekStart}
@@ -208,7 +208,7 @@ const WeeklyReviewPage: React.FC<WeeklyReviewPageProps> = ({
             />
           </AsciiBox>
 
-          <AsciiBox title="本周证据">
+          <AsciiBox title="本周证据" className="weekly-review-evidence-box">
             <div
               className="font-caption"
               style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-2)' }}

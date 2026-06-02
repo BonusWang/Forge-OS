@@ -21,7 +21,7 @@ const ReflectionPage: React.FC = () => {
         aria-label="反思库与能力训练"
       >
         <div>
-          <AsciiBox title="反思库">
+          <AsciiBox title="反思库" className="reflection-library-box">
             <ReflectionGrid onViewDetail={setSelectedReflection} />
           </AsciiBox>
         </div>

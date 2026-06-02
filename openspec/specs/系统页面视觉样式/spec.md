@@ -2,32 +2,32 @@
 
 ## Purpose
 
-本规范定义系统页面在原风格与 orbit-general 参考风格之间切换时的视觉、导航、交互和业务边界要求。能力目录和正文使用中文；OpenSpec 必需的结构关键字保持英文，以保证框架可以继续解析和校验。
+本规范定义系统页面在原风格、orbit-general 参考风格与 Supabase 参考风格之间切换时的视觉、导航、交互和业务边界要求。能力目录和正文使用中文；OpenSpec 必需的结构关键字保持英文，以保证框架可以继续解析和校验。
 ## Requirements
 ### Requirement: Style toggle replaces separate new system page / 风格切换替代独立新系统页
 
-系统 MUST（必须）使用 `[◇ 风格切换]` 在原风格和 orbit-general 参考风格之间切换，而不是通过 `[◇ 新系统]` 跳转到独立页面。
+系统 MUST（必须）使用风格切换入口在原风格、orbit-general 参考风格和 Supabase 参考风格之间切换，而不是通过 `[◇ 新系统]` 跳转到独立页面。
 
 #### Scenario: Style toggle is available / 风格切换可用
 
-- **WHEN** 用户查看顶部导航
-- **THEN** 导航展示 `[◇ 风格切换]`
+- **WHEN** 用户查看应用导航
+- **THEN** 导航展示风格切换入口
 - **AND** 导航不展示 `[◇ 新系统]`
 
-#### Scenario: Toggle returns to original style / 可切回原风格
+#### Scenario: Toggle cycles through visual styles / 可循环切换风格
 
-- **WHEN** 用户在新风格下再次点击 `[◇ 风格切换]`
-- **THEN** 系统切回原风格
+- **WHEN** 用户连续点击风格切换入口
+- **THEN** 系统在原风格、Orbit 风格和 Supabase 风格之间循环
 - **AND** 当前功能页面保持在同一业务页面上
 
 ### Requirement: New style preserves existing functional navigation / 新风格保留现有功能导航
 
-新风格 MUST（必须）保留周看板、反思库、系统页、模块管理和主题切换入口。
+新风格 MUST（必须）保留周看板、反思库、周复盘、系统页、模块管理和主题切换入口。
 
 #### Scenario: New style navigation includes existing functions / 新风格导航包含现有功能
 
 - **WHEN** 用户切换到新风格
-- **THEN** 导航仍展示周看板、反思库、◇ 系统、[◇ 风格切换]、[⊕ 模块] 和主题切换按钮
+- **THEN** 导航仍展示周看板、反思库、周复盘、系统、风格切换、模块和主题切换入口
 
 #### Scenario: Original page state is reused / 复用原页面状态
 
@@ -66,6 +66,22 @@
 - **WHEN** 用户使用原风格
 - **THEN** 系统仍可展示现有空状态图片
 - **AND** 不改变原风格空状态布局
+
+### Requirement: Supabase style provides developer-product dark treatment / Supabase 风格提供开发者产品深色处理
+
+Supabase 风格 MUST（必须）参考 `Supabase-showcase` 的深色开发者产品语言，使用黑色背景、绿色强调色、圆角表面、克制边框和系统字体，同时保持业务 DOM 结构不变。
+
+#### Scenario: Supabase style uses expected visual tokens / Supabase 风格使用预期视觉 token
+
+- **WHEN** 用户切换到 Supabase 风格
+- **THEN** 页面使用深色背景、绿色强调色和圆角卡片表面
+- **AND** 风格按钮展示可识别的 Supabase 当前状态提示
+
+#### Scenario: Supabase style preserves business structure / Supabase 风格保留业务结构
+
+- **WHEN** 用户在 Supabase 风格下查看周看板、反思库、周复盘或系统页
+- **THEN** 页面业务模块集合、模块顺序和业务操作语义保持不变
+- **AND** store 结构、持久化格式和 Electron IPC 合约不发生变化
 
 ### Requirement: Product brand uses Forge-OS identity / 产品品牌使用 Forge-OS 标识
 
@@ -158,12 +174,13 @@
 
 ### Requirement: Navigation remains stable and scannable / 导航保持稳定可扫
 
-顶部导航 MUST（必须）保持现有功能入口和文案不变，同时优化按钮尺寸、激活态、焦点态和横向滚动表现，让桌面端和窄屏下都可快速扫描。
+应用导航 MUST（必须）保持现有功能入口和文案不变，同时优化按钮尺寸、激活态、焦点态和窄屏表现，让桌面端和窄屏下都可快速扫描。
 
-#### Scenario: Navigation entries remain unchanged / 导航入口不变
+#### Scenario: Navigation entries use workflow order / 导航入口使用工作流顺序
 
-- **WHEN** 用户查看顶部导航
-- **THEN** 导航仍展示周看板、反思库、周复盘、◇ 系统、`[◇ 风格切换]`、`[⊕ 模块]` 和主题切换按钮
+- **WHEN** 用户查看应用导航
+- **THEN** 页面主入口按 `01 周看板`、`02 周复盘`、`03 反思库`、`04 系统` 顺序展示
+- **AND** 工具入口仍展示风格、模块和主题切换入口
 - **AND** 不新增、不删除、不重命名这些入口
 
 #### Scenario: Navigation has stable interaction states / 导航交互状态稳定
@@ -171,6 +188,13 @@
 - **WHEN** 用户 hover、focus 或切换当前页面
 - **THEN** 导航按钮提供清晰但克制的视觉反馈
 - **AND** 按钮文本不因状态切换出现明显宽度跳动
+
+#### Scenario: Weekly review is not duplicated in dashboard toolbar / 周复盘不在周看板工具栏重复出现
+
+- **WHEN** 用户查看周看板工具栏
+- **THEN** 工具栏只展示周切换相关操作
+- **AND** 不展示重复的 `[周复盘]` 快捷按钮
+- **AND** 用户仍可通过左侧导航进入周复盘页面
 
 ### Requirement: Layout polish preserves business behavior / 排版优化保持业务行为
 
@@ -184,7 +208,7 @@
 
 #### Scenario: Style toggle shares the same structure / 风格切换共享同一结构
 
-- **WHEN** 用户在 classic 和 orbit 风格之间切换
+- **WHEN** 用户在 classic、Orbit 和 Supabase 风格之间切换
 - **THEN** 当前业务页面的 DOM 业务模块集合和顺序保持一致
 - **AND** 风格切换只改变视觉表现
 
@@ -207,8 +231,9 @@
 
 - **WHEN** 用户在桌面端查看周看板页面
 - **THEN** 本周任务看板位于今日执行条之后
-- **AND** 收纳箱、周一至周日任务列、周切换和周复盘入口保持可用
-- **AND** 任务添加、完成、拖拽和周复盘打开逻辑不发生变化
+- **AND** 收纳箱、周一至周日任务列和周切换保持可用
+- **AND** 周复盘入口通过左侧主导航保持可用
+- **AND** 任务添加、完成和拖拽逻辑不发生变化
 
 #### Scenario: Supporting modules are grouped after weekly board / 辅助模块位于周看板之后
 
@@ -227,8 +252,8 @@
 
 #### Scenario: Style modes share the same dashboard structure / 风格模式共享同一周看板结构
 
-- **WHEN** 用户在原风格和 orbit 风格之间切换
-- **THEN** 两种风格使用同一套周看板基础排版
+- **WHEN** 用户在原风格、Orbit 风格和 Supabase 风格之间切换
+- **THEN** 三种风格使用同一套周看板基础排版
 - **AND** 风格切换不得改变今日执行条、周看板和辅助沉淀区的模块集合或顺序
 
 #### Scenario: Desktop layout remains readable without horizontal page overflow / 桌面端布局可读且页面不横向溢出
@@ -237,3 +262,26 @@
 - **THEN** 今日执行条和辅助沉淀区使用适合桌面扫描的网格布局
 - **AND** 页面主体不产生非预期的横向滚动
 - **AND** 周看板自身可以保留内部横向滚动以承载任务列
+
+### Requirement: Module picker is a scannable settings panel / 模块管理是可扫描设置面板
+
+模块管理弹窗 MUST（必须）以可扫描的设置面板呈现模块名称、说明、默认区域和启用状态，同时复用原有模块启用数据与切换逻辑。
+
+#### Scenario: Module picker shows module state and area / 模块弹窗展示状态和区域
+
+- **WHEN** 用户打开模块管理
+- **THEN** 弹窗以卡片或设置项形式展示所有可配置模块
+- **AND** 每个模块展示模块名称、说明、主区或侧栏归属以及启用或隐藏状态
+- **AND** 弹窗展示当前启用数量
+
+#### Scenario: Module picker preserves toggle logic / 模块弹窗保留切换逻辑
+
+- **WHEN** 用户点击模块管理中的模块项
+- **THEN** 系统仍使用原有模块启用切换逻辑更新 `enabledModules`
+- **AND** 不改变 `MODULE_REGISTRY`、默认启用规则、store 结构或持久化格式
+
+#### Scenario: Module picker remains bounded / 模块弹窗边界稳定
+
+- **WHEN** 用户在桌面端或窄屏下打开模块管理
+- **THEN** 弹窗内容在视口内滚动或降级为单列
+- **AND** 页面不产生非预期横向溢出

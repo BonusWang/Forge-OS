@@ -52,11 +52,16 @@ const ReflectionGrid: React.FC<ReflectionGridProps> = ({ onViewDetail }) => {
 
       <div
         className="reflection-card-grid"
+        data-card-count={paginated.length}
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
+          gridTemplateColumns:
+            paginated.length <= 2
+              ? 'repeat(auto-fit, minmax(260px, 360px))'
+              : 'repeat(auto-fill, minmax(220px, 1fr))',
           gap: 'var(--space-3)',
           marginTop: 'var(--space-3)',
+          alignItems: 'start',
         }}
       >
         {paginated.map((r) => (

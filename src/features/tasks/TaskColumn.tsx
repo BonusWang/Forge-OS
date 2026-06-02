@@ -25,6 +25,11 @@ const TaskColumn: React.FC<TaskColumnProps> = ({ date, column, tasks, title, dat
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id: droppableId });
 
   const sortedTasks = [...tasks].sort((a, b) => a.order - b.order);
+  const columnClassName = [
+    'task-column',
+    isBacklog ? 'task-column--backlog' : 'task-column--day',
+    sortedTasks.length === 0 ? 'task-column--empty' : 'task-column--active',
+  ].join(' ');
 
   const handleAdd = () => {
     if (newContent.trim()) {
@@ -50,7 +55,7 @@ const TaskColumn: React.FC<TaskColumnProps> = ({ date, column, tasks, title, dat
 
   return (
     <div
-      className="task-column"
+      className={columnClassName}
       style={{
         border: isBacklog
           ? '1px dashed var(--border-primary)'
