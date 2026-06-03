@@ -32,7 +32,8 @@ When ready to implement, run /opsx:apply
    From their description, derive a name using today's date in YYYYMMDD format:
    - New requirement by default: `req_<简短中文名>_<YYYYMMDD>` (e.g., `req_优化系统页面样式_20260601`)
    - Bug fix only when clearly stated: `fix_<简短中文名>_<YYYYMMDD>` (e.g., `fix_启动数据丢失_20260601`)
-   Use English only if the user explicitly asks for English.
+   The middle name segment MUST contain Chinese characters. Do not translate Chinese requests into English slugs; keep product names such as Forge-OS inside the Chinese title when needed.
+   Use English only if the user explicitly provides an exact English name and asks to keep it.
 
    **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
 
@@ -101,6 +102,8 @@ After completing all artifacts, summarize:
 - The schema defines what each artifact should contain - follow it
 - Read dependency artifacts for context before creating new ones
 - Use `template` as the structure for your output file - fill in its sections
+- For proposal/design/tasks markdown headings, keep the English heading and add Chinese after a slash, e.g. `## Why / 背景`, `## What Changes / 变更内容`, `## Capabilities / 能力范围`, `### New Capabilities / 新增能力`, `### Modified Capabilities / 修改能力`, `## Impact / 影响范围`.
+- For spec delta operation headings, keep parser-required headers exact, e.g. `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`, `## RENAMED Requirements`; put Chinese on the next line as a note such as `> 中文：新增需求`.
 - **IMPORTANT**: `context` and `rules` are constraints for YOU, not content for the file
   - Do NOT copy `<context>`, `<rules>`, `<project_context>` blocks into the artifact
   - These guide what you write, but should never appear in the output

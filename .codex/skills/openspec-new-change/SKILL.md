@@ -23,7 +23,8 @@ Start a new change using the experimental artifact-driven approach.
    From their description, derive a name using today's date in YYYYMMDD format:
    - New requirement by default: `req_<简短中文名>_<YYYYMMDD>` (e.g., `req_优化系统页面样式_20260601`)
    - Bug fix only when clearly stated: `fix_<简短中文名>_<YYYYMMDD>` (e.g., `fix_启动数据丢失_20260601`)
-   Use English only if the user explicitly asks for English.
+   The middle name segment MUST contain Chinese characters. Do not translate Chinese requests into English slugs; keep product names such as Forge-OS inside the Chinese title when needed.
+   Use English only if the user explicitly provides an exact English name and asks to keep it.
 
    **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
 

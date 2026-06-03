@@ -4,6 +4,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 const storageFileName = 'alo-data.json'
+const packageJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8')) as {
+  version?: string
+}
+const appVersion = packageJson.version ?? '0.0.0'
 const forgeDataDir = process.env.FORGE_DATA_DIR
   ? path.resolve(process.env.FORGE_DATA_DIR)
   : process.env.APPDATA
@@ -72,6 +76,9 @@ function sendJson(response: { statusCode: number; setHeader: (name: string, valu
 
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
+  },
   plugins: [
     react(),
     {
@@ -81,6 +88,11 @@ export default defineConfig({
           try {
             const requestUrl = new URL(request.url ?? '/', 'http://localhost')
             const storageName = decodeURIComponent(requestUrl.pathname.replace(/^\/+/, ''))
+            if (storageName === '__storage_url__') {
+              sendJson(response, 200, { path: forgeDataFile })
+              return
+            }
+
             if (!storageName) {
               sendJson(response, 400, { error: 'missing storage name' })
               return

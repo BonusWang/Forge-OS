@@ -188,6 +188,13 @@ export interface AppState {
   inboxItems: InboxItem[];
   config: AppConfig;
   enabledModules: ModuleId[];
+  habits: Habit[];
+  moods: MoodEntry[];
+  timeBlocks: TimeBlock[];
+  inspirations: Inspiration[];
+  reflectionTemplates: ReflectionTemplate[];
+  syncConfig: import('./sync').CosSyncConfig;
+  syncStatus: import('./sync').SyncStatus;
   __version: string;
 }
 
@@ -197,9 +204,17 @@ declare global {
     electronAPI?: {
       loadDataSync: () => Record<string, string> | null;
       saveData: (data: Record<string, string>) => Promise<boolean>;
+      getDataFilePath: () => string;
       getAppVersion: () => string;
       saveRollback: (data: Record<string, unknown>) => Promise<boolean>;
       onBeforeQuit: (callback: () => void) => void;
+    };
+    androidStorage?: {
+      loadData: () => string;
+      saveData: (data: string) => boolean;
+      getDataFilePath: () => string;
+      getAppVersion: () => string;
+      saveRollback: (data: string) => boolean;
     };
   }
 }

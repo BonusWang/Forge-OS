@@ -6,12 +6,21 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+.env
+.env.*
+!.env.example
 
 node_modules
 dist
 dist-ssr
 *.local
 release
+.gstack/
+*.png_bak
+android/.gradle/
+android/local.properties
+android/build/
+android/app/build/
 src-tauri/target
 .codex/dev-*.log
 .codex/design-review/

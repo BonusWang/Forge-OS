@@ -110,6 +110,8 @@ For other schemas, follow the `instruction` field from the CLI output.
 - Create ONE artifact per invocation
 - Always read dependency artifacts before creating a new one
 - Never skip artifacts or create out of order
+- For proposal/design/tasks markdown headings, keep the English heading and add Chinese after a slash, e.g. `## Why / 背景`, `## What Changes / 变更内容`, `## Capabilities / 能力范围`, `### New Capabilities / 新增能力`, `### Modified Capabilities / 修改能力`, `## Impact / 影响范围`.
+- For spec delta operation headings, keep parser-required headers exact, e.g. `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`, `## RENAMED Requirements`; put Chinese on the next line as a note such as `> 中文：新增需求`.
 - If context is unclear, ask the user before creating
 - Verify the artifact file exists after writing before marking progress
 - Use the schema's artifact sequence, don't assume specific artifact names

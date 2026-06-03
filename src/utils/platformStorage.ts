@@ -1,4 +1,4 @@
-// Custom storage adapter for Zustand persist middleware.
+// Platform storage adapter for Zustand persist middleware.
 // When running in Electron, uses IPC to persist data as a file in the user's
 // app data directory. Falls back to localStorage when running in a browser.
 //
@@ -15,7 +15,9 @@
 import type { PersistStorage, StorageValue } from 'zustand/middleware';
 
 const api = window.electronAPI;
+const androidStorage = window.androidStorage;
 const DEV_STORAGE_ENDPOINT = '/__forge_data__';
+const DEV_STORAGE_DISPLAY_URL_ENDPOINT = `${DEV_STORAGE_ENDPOINT}/__storage_url__`;
 
 function canUseDevServerStorage(): boolean {
   return (
@@ -48,6 +50,94 @@ function removeLocalStorageItem(name: string): void {
   } catch {
     // Storage unavailable, ignore.
   }
+}
+
+function readDevServerStorageDisplayUrl(): string | null {
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', DEV_STORAGE_DISPLAY_URL_ENDPOINT, false);
+    xhr.send();
+    if (xhr.status < 200 || xhr.status >= 300) return null;
+    const parsed = JSON.parse(xhr.responseText) as { path?: unknown };
+    return typeof parsed.path === 'string' && parsed.path ? parsed.path : null;
+  } catch {
+    return null;
+  }
+}
+
+export function getPlatformStorageDisplayUrl(): string {
+  const electronDataFilePath = window.electronAPI?.getDataFilePath?.();
+  if (electronDataFilePath) return electronDataFilePath;
+
+  const androidDataFilePath = window.androidStorage?.getDataFilePath?.();
+  if (androidDataFilePath) return androidDataFilePath;
+
+  if (canUseDevServerStorage()) {
+    const devServerDataFilePath = readDevServerStorageDisplayUrl();
+    if (devServerDataFilePath) return devServerDataFilePath;
+  }
+
+  return `localStorage://${window.location.origin}/alo-storage`;
+}
+
+function readAndroidStorageRecord(): Record<string, string> {
+  if (!androidStorage) return {};
+
+  try {
+    const parsed = JSON.parse(androidStorage.loadData());
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+    if (!Object.values(parsed).every((value) => typeof value === 'string')) return {};
+    return parsed as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+
+function createAndroidStorage(): PersistStorage<unknown> {
+  let cache: Record<string, string> | null = null;
+
+  const loadCache = () => {
+    if (cache === null) {
+      cache = readAndroidStorageRecord();
+    }
+    return cache;
+  };
+
+  const saveCache = () => {
+    if (!androidStorage || cache === null) return false;
+    return androidStorage.saveData(JSON.stringify(cache));
+  };
+
+  return {
+    getItem(name: string): StorageValue<unknown> | null {
+      const raw = loadCache()[name];
+      if (raw === undefined) return null;
+      try {
+        return JSON.parse(raw) as StorageValue<unknown>;
+      } catch {
+        return null;
+      }
+    },
+    setItem(name: string, value: StorageValue<unknown>): void {
+      const data = loadCache();
+      const serialized = JSON.stringify(value);
+      if (data[name] !== serialized) {
+        data[name] = serialized;
+        if (!saveCache()) {
+          console.error('[platformStorage] Android private storage write failed.');
+        }
+      }
+    },
+    removeItem(name: string): void {
+      const data = loadCache();
+      if (name in data) {
+        delete data[name];
+        if (!saveCache()) {
+          console.error('[platformStorage] Android private storage delete failed.');
+        }
+      }
+    },
+  };
 }
 
 function createDevServerStorage(): PersistStorage<unknown> {
@@ -139,7 +229,7 @@ function createStorage(): PersistStorage<unknown> {
         // saveData returned false — disk write failed
         return false;
       } catch (e) {
-        console.error('[electronStorage] saveData threw:', e);
+        console.error('[platformStorage] saveData threw:', e);
         return false;
       }
     };
@@ -148,7 +238,7 @@ function createStorage(): PersistStorage<unknown> {
       if (retryTimer !== null) clearTimeout(retryTimer);
       if (retryCount >= MAX_RETRIES) {
         console.error(
-          `[electronStorage] Write failed ${MAX_RETRIES} times. Data remains in memory but may be lost on exit.`
+          `[platformStorage] Write failed ${MAX_RETRIES} times. Data remains in memory but may be lost on exit.`
         );
         return;
       }
@@ -223,6 +313,10 @@ function createStorage(): PersistStorage<unknown> {
     };
   }
 
+  if (androidStorage) {
+    return createAndroidStorage();
+  }
+
   if (canUseDevServerStorage()) {
     return createDevServerStorage();
   }
@@ -241,4 +335,4 @@ function createStorage(): PersistStorage<unknown> {
   };
 }
 
-export const electronStorage = createStorage();
+export const platformStorage = createStorage();

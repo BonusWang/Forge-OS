@@ -7,20 +7,40 @@ export const systemCopy = {
     currentVersion: '当前版本',
     checkButton: '打听一下',
     checking: '正在向远方修道院打听……',
-    upToDate: '已是最新版。修道院也没新活儿了，继续修行吧。',
+    upToDate: '程序猿说在开发了在开发了',
     hasUpdate: '新的启示已降临——虽然你未必会因此变得更自律。',
-    updateError: '信使迷了路。可能是网络问题，也可能是信使自己也在拖延。',
+    updateErrors: [
+      '开发者说，没打听到消息。可能网络在摆烂，也可能发布通道还没修好。',
+      '开发者说，刚问了一圈，大家都说还在开发了在开发了。',
+      '开发者说，版本情报暂时失联。先别急，急也没用。',
+      '开发者说，服务器没回话，像极了周一早会里的沉默。',
+      '开发者说，发布通道正在装死，等它想开了再来。',
+    ],
     downloadUrl: '去下载',
   },
 
   backup: {
     title: '数据备份',
+    localStorageUrlLabel: '本机存储url',
     exportButton: '导出数据',
     importButton: '导入数据',
+    syncLocalButton: '同步到本地',
+    backupCloudButton: '备份到云服务',
+    restoreHistoryButton: '恢复历史数据',
+    confirmHistoryRestoreButton: '确认恢复',
     exportSuccess: '数据已导出。你的本地记录现在有了一份备份。',
     importSuccess: '数据已导入，即将刷新…',
     importFailed: '数据导入失败。请确认文件格式正确。',
-    sepiaHint: '导出或导入本地数据，入口统一放在系统页面。',
+    syncLocalRunning: '正在从云服务同步到本地…',
+    backupCloudRunning: '正在备份到云服务…',
+    historyLoading: '正在读取云端历史数据…',
+    syncLocalSuccess: '已从云服务同步到本地。',
+    backupCloudSuccess: '已备份到云服务。',
+    historyLoaded: '已读取云端历史数据，请选择要恢复的版本。',
+    historyEmpty: '云端暂无历史数据。',
+    historyRestoreSuccess: '已恢复云端历史数据，即将刷新…',
+    cloudConflict: '云端和本地同时变化，请到 COS 数据同步面板处理冲突。',
+    sepiaHint: '导出、恢复或同步数据，入口统一放在系统页面。',
   },
 
   about: {
@@ -49,5 +69,11 @@ export const systemCopy = {
   // Monk quote box title
   quoteTitle: '每日真相',
 } as const;
+
+export function pickUpdateErrorCopy(random: () => number = Math.random): string {
+  const messages = systemCopy.update.updateErrors;
+  const index = Math.min(Math.floor(random() * messages.length), messages.length - 1);
+  return messages[index] ?? systemCopy.update.updateErrors[0];
+}
 
 export type SystemCopy = typeof systemCopy;

@@ -140,6 +140,10 @@ ipcMain.on('get-app-version', (event) => {
   }
 });
 
+ipcMain.on('get-data-file-path', (event) => {
+  event.returnValue = DATA_FILE;
+});
+
 ipcMain.handle('save-rollback', (_event, data) => {
   try {
     fs.writeFileSync(ROLLBACK_FILE, JSON.stringify(data, null, 2), 'utf-8');

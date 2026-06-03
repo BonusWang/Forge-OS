@@ -3,7 +3,9 @@
  * 从 GitHub Releases 拉取 latest.json 并对比本地版本
  */
 
-export const APP_VERSION = '0.1.1';
+declare const __APP_VERSION__: string;
+
+export const APP_VERSION = typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : '0.0.0';
 
 export interface UpdateInfo {
   version: string;

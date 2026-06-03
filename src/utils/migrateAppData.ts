@@ -4,7 +4,7 @@
  */
 
 import type { AppState } from '../types';
-import { compareVersion, APP_VERSION } from './checkUpdate';
+import { compareVersion, APP_VERSION } from './checkUpdate.ts';
 
 export const CURRENT_APP_VERSION = APP_VERSION;
 
@@ -15,6 +15,21 @@ type Migration = (state: AppState) => AppState;
 const migrations: Record<string, Migration> = {
   // 当需要数据迁移时在此注册版本迁移函数
   // '0.2.0': (state) => ({ ...state, newField: [] }),
+};
+
+const OLD_COS_DEFAULT_PREFIX = 'Forge-OS_Base/Domain1127';
+const SHARED_COS_DEFAULT_PREFIX = 'Forge-OS_Base/Domain1127/GoogleChrome';
+
+const normalizeSyncDefaults = (state: AppState): AppState => {
+  if (state.syncConfig?.objectPrefix !== OLD_COS_DEFAULT_PREFIX) return state;
+
+  return {
+    ...state,
+    syncConfig: {
+      ...state.syncConfig,
+      objectPrefix: SHARED_COS_DEFAULT_PREFIX,
+    },
+  };
 };
 
 /**
@@ -28,20 +43,21 @@ export function migrateAppData(
   targetVersion: string
 ): AppState {
   const currentVersion = state.__version || '0.1.0';
+  const normalizedState = normalizeSyncDefaults(state);
 
   if (currentVersion === targetVersion) {
-    return state;
+    return normalizedState;
   }
 
   // 降级不支持，直接标记版本
   if (compareVersion(currentVersion, targetVersion) > 0) {
-    return { ...state, __version: targetVersion };
+    return { ...normalizedState, __version: targetVersion };
   }
 
   // 保存 rollback 快照
   saveRollbackSnapshot(state);
 
-  let next: AppState = { ...state };
+  let next: AppState = { ...normalizedState };
   const versions = Object.keys(migrations).sort(compareVersion);
 
   for (const v of versions) {
@@ -65,6 +81,8 @@ function saveRollbackSnapshot(state: AppState): void {
     const snapshot = JSON.parse(JSON.stringify(state));
     if (window.electronAPI?.saveRollback) {
       window.electronAPI.saveRollback(snapshot).catch(() => {});
+    } else if (window.androidStorage?.saveRollback) {
+      window.androidStorage.saveRollback(JSON.stringify(snapshot));
     } else {
       localStorage.setItem('alo-rollback', JSON.stringify(snapshot));
     }

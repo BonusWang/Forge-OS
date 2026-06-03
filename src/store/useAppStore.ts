@@ -14,9 +14,10 @@ import { createMoodSlice, type MoodSlice } from './slices/moodSlice';
 import { createTimeBlockSlice, type TimeBlockSlice } from './slices/timeBlockSlice';
 import { createInspirationSlice, type InspirationSlice } from './slices/inspirationSlice';
 import { createReflectionTemplateSlice, type ReflectionTemplateSlice } from './slices/reflectionTemplateSlice';
+import { createSyncSlice, type SyncSlice } from './slices/syncSlice';
 import { migrateAllReflections } from '../utils/migrateReflectionData';
 import { migrateAppData, CURRENT_APP_VERSION } from '../utils/migrateAppData';
-import { electronStorage } from '../utils/electronStorage';
+import { platformStorage } from '../utils/platformStorage';
 import type { AppState } from '../types';
 
 export type AppStore = TaskSlice &
@@ -32,7 +33,8 @@ export type AppStore = TaskSlice &
   MoodSlice &
   TimeBlockSlice &
   InspirationSlice &
-  ReflectionTemplateSlice & {
+  ReflectionTemplateSlice &
+  SyncSlice & {
     __version: string;
   };
 
@@ -53,11 +55,12 @@ export const useAppStore = create<AppStore>()(
       ...createTimeBlockSlice(...args),
       ...createInspirationSlice(...args),
       ...createReflectionTemplateSlice(...args),
+      ...createSyncSlice(...args),
       __version: CURRENT_APP_VERSION,
     }),
     {
       name: 'alo-storage',
-      storage: electronStorage as PersistStorage<AppState>,
+      storage: platformStorage as PersistStorage<AppState>,
       partialize: (state) => ({
         tasks: state.tasks,
         calendarEvents: state.calendarEvents,
@@ -74,6 +77,8 @@ export const useAppStore = create<AppStore>()(
         timeBlocks: state.timeBlocks,
         inspirations: state.inspirations,
         reflectionTemplates: state.reflectionTemplates,
+        syncConfig: state.syncConfig,
+        syncStatus: state.syncStatus,
         __version: state.__version,
       }),
       onRehydrateStorage: () => (state) => {

@@ -2,6 +2,7 @@ import React from 'react';
 import AsciiBox from '../components/AsciiBox';
 import UpdatePanel from '../features/system/UpdatePanel';
 import DataBackupPanel from '../features/system/DataBackupPanel';
+import SyncPanel from '../features/system/SyncPanel';
 import MonkQuote from '../features/system/MonkQuote';
 import { systemCopy } from '../copy/system-copy';
 
@@ -12,6 +13,7 @@ const System: React.FC = () => {
         <div className="system-column system-column--operations">
           <UpdatePanel />
           <DataBackupPanel />
+          <SyncPanel />
         </div>
 
         <div className="system-column system-column--identity">

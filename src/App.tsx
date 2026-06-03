@@ -5,6 +5,7 @@ import System from './pages/System';
 import WeeklyReview from './pages/WeeklyReview';
 import ModulePicker from './features/modules/ModulePicker';
 import { useWeekCleanup } from './hooks/useWeekCleanup';
+import { useStartupCosSync } from './hooks/useStartupCosSync';
 import { useDocumentTitle } from './hooks/useDocumentTitle';
 import { useAppStore } from './store/useAppStore';
 import { checkUpdate, APP_VERSION } from './utils/checkUpdate';
@@ -67,6 +68,7 @@ function App() {
   }, [config.theme]);
 
   useWeekCleanup();
+  useStartupCosSync();
   useDocumentTitle();
 
   // Check for updates on mount
@@ -665,21 +667,21 @@ function App() {
           .orbit-style-shell .app-rail {
             height: auto !important;
             min-height: 60px;
-            padding: 10px 12px !important;
+            padding: 6px 10px !important;
             flex-wrap: wrap !important;
             align-items: flex-start !important;
             justify-content: flex-start !important;
-            gap: 10px;
+            gap: 4px;
           }
 
           .supabase-style-shell .app-rail {
             height: auto !important;
             min-height: 60px;
-            padding: 10px 12px !important;
+            padding: 6px 10px !important;
             flex-wrap: wrap !important;
             align-items: flex-start !important;
             justify-content: flex-start !important;
-            gap: 10px;
+            gap: 4px;
           }
 
           .orbit-style-shell .app-rail-brand {
@@ -704,6 +706,19 @@ function App() {
           .supabase-style-shell .app-rail-section {
             width: 100%;
             padding-bottom: 2px;
+          }
+
+          .orbit-style-shell .app-rail-button,
+          .supabase-style-shell .app-rail-button {
+            grid-template-columns: 1fr;
+            justify-items: center;
+            min-height: 40px;
+            text-align: center;
+          }
+
+          .orbit-style-shell .app-rail-section--tools .app-rail-button,
+          .supabase-style-shell .app-rail-section--tools .app-rail-button {
+            min-height: 34px;
           }
 
           .orbit-style-shell .reflection-grid,

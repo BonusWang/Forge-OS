@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import AsciiBox from '../../components/AsciiBox';
 import { toMonksCalendar } from '../../utils/monksCalendar';
 import { checkUpdate, APP_VERSION } from '../../utils/checkUpdate';
-import { systemCopy } from '../../copy/system-copy';
+import { pickUpdateErrorCopy, systemCopy } from '../../copy/system-copy';
 
 const UpdatePanel: React.FC = () => {
   const [version] = useState<string>(() => {
@@ -16,11 +16,13 @@ const UpdatePanel: React.FC = () => {
     'idle' | 'checking' | 'up-to-date' | 'has-update' | 'error'
   >('idle');
   const [latestUrl, setLatestUrl] = useState<string>('');
+  const [errorText, setErrorText] = useState<string>('');
 
   const handleCheck = async () => {
     setStatus('checking');
     const result = await checkUpdate(version);
     if (result.error) {
+      setErrorText(pickUpdateErrorCopy());
       setStatus('error');
       return;
     }
@@ -37,7 +39,7 @@ const UpdatePanel: React.FC = () => {
     checking: systemCopy.update.checking,
     'up-to-date': systemCopy.update.upToDate,
     'has-update': `${systemCopy.update.hasUpdate}`,
-    error: systemCopy.update.updateError,
+    error: errorText,
   }[status];
 
   return (
