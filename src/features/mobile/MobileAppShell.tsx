@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import MobileCaptureHub from './MobileCaptureHub';
 import MobileTodayForge from './MobileTodayForge';
 import MobileWeekProgress from './MobileWeekProgress';
@@ -22,6 +22,27 @@ const navItems: Array<{ id: MobileSection; label: string; index: string }> = [
   { id: 'system', label: '系统', index: '04' },
 ];
 
+const MOBILE_SECTION_HASH_PREFIX = '#mobile-';
+const mobileMediaQuery = '(max-width: 767px), (hover: none) and (pointer: coarse)';
+
+const isMobileSection = (value: string): value is MobileSection =>
+  navItems.some((item) => item.id === value);
+
+const getSectionHash = (section: MobileSection) => `${MOBILE_SECTION_HASH_PREFIX}${section}`;
+
+const getSectionFromLocation = (): MobileSection => {
+  if (typeof window === 'undefined') return 'today';
+  if (!window.location.hash.startsWith(MOBILE_SECTION_HASH_PREFIX)) return 'today';
+
+  const section = window.location.hash.slice(MOBILE_SECTION_HASH_PREFIX.length);
+  return isMobileSection(section) ? section : 'today';
+};
+
+const canUseMobileHistory = () => {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia?.(mobileMediaQuery).matches ?? true;
+};
+
 const MobileAppShell: React.FC<MobileAppShellProps> = ({
   onOpenModulePicker,
   onToggleTheme,
@@ -30,8 +51,36 @@ const MobileAppShell: React.FC<MobileAppShellProps> = ({
   visualStyleLabel,
   hasUpdate,
 }) => {
-  const [activeSection, setActiveSection] = useState<MobileSection>('today');
+  const [activeSection, setActiveSection] = useState<MobileSection>(() => getSectionFromLocation());
   const [isSystemToolsOpen, setIsSystemToolsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!canUseMobileHistory()) return;
+
+    const nextHash = getSectionHash(activeSection);
+    if (window.location.hash !== nextHash) {
+      window.history.replaceState({ mobileSection: activeSection }, '', nextHash);
+    }
+  }, [activeSection]);
+
+  useEffect(() => {
+    if (!canUseMobileHistory()) return;
+
+    const handlePopState = () => {
+      setActiveSection(getSectionFromLocation());
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const selectSection = (nextSection: MobileSection) => {
+    if (nextSection === activeSection) return;
+    setActiveSection(nextSection);
+    if (canUseMobileHistory()) {
+      window.history.pushState({ mobileSection: nextSection }, '', getSectionHash(nextSection));
+    }
+  };
 
   const renderSection = () => {
     if (activeSection === 'today') return <MobileTodayForge />;
@@ -95,7 +144,7 @@ const MobileAppShell: React.FC<MobileAppShellProps> = ({
             type="button"
             className="mobile-nav-button"
             aria-current={activeSection === item.id ? 'page' : undefined}
-            onClick={() => setActiveSection(item.id)}
+            onClick={() => selectSection(item.id)}
           >
             <span>{item.index}</span>
             <strong>{item.label}</strong>

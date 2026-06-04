@@ -63,3 +63,9 @@ export const getDateLabelForDay = (day: DayColumn): string => {
   };
   return labels[day] || day;
 };
+
+export const formatLocalDateTime = (value: string): string => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return format(date, 'M月d日 HH:mm');
+};

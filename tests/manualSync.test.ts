@@ -236,7 +236,7 @@ test('runManualSync marks conflict and backs up local data before overwrite', as
   assert.equal(uploaded[0].backup, true);
 });
 
-test('runManualSync uploads local data when the local version is newer than the cloud version', async () => {
+test('runManualSync conflicts instead of auto-uploading when both sides changed and local is newer', async () => {
   const remote = await createSyncEnvelope({
     appVersion: '1.0.2',
     deviceId: 'device-2',
@@ -259,13 +259,15 @@ test('runManualSync uploads local data when the local version is newer than the 
     now: '2026-06-03T10:02:00.000Z',
   });
 
-  assert.equal(result.phase, 'success');
-  assert.equal(result.action, 'uploaded');
-  assert.equal(uploaded.length, 1);
-  assert.equal(uploaded[0].backup, false);
+  assert.equal(result.phase, 'conflict');
+  assert.equal(uploaded.length, 0);
+  if (result.phase === 'conflict' && 'localUpdatedAt' in result) {
+    assert.equal(result.localUpdatedAt, '2026-06-03T10:00:00.000Z');
+    assert.equal(result.remoteUpdatedAt, '2026-06-03T09:00:00.000Z');
+  }
 });
 
-test('runManualSync restores cloud data when the cloud version is newer than the local version', async () => {
+test('runManualSync conflicts instead of auto-restoring when both sides changed and cloud is newer', async () => {
   const remote = await createSyncEnvelope({
     appVersion: '1.0.2',
     deviceId: 'device-2',
@@ -287,9 +289,11 @@ test('runManualSync restores cloud data when the cloud version is newer than the
     localUpdatedAt: '2026-06-03T10:00:00.000Z',
   });
 
-  assert.equal(result.phase, 'success');
-  assert.equal(result.action, 'restored');
-  assert.equal(result.revision, 'remote-2');
+  assert.equal(result.phase, 'conflict');
+  if (result.phase === 'conflict' && 'localUpdatedAt' in result) {
+    assert.equal(result.localUpdatedAt, '2026-06-03T10:00:00.000Z');
+    assert.equal(result.remoteUpdatedAt, '2026-06-03T11:00:00.000Z');
+  }
   assert.equal(uploaded.length, 0);
 });
 

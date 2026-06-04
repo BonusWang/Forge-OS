@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { addDays, format } from 'date-fns';
 import { useAppStore } from '../../store/useAppStore';
 import { getTodayString } from '../../utils/date';
@@ -12,6 +12,7 @@ const MobileTodayForge: React.FC = () => {
   const principles = useAppStore((s) => s.principles);
   const moods = useAppStore((s) => s.moods);
   const reflections = useAppStore((s) => s.reflections);
+  const addTask = useAppStore((s) => s.addTask);
   const toggleTask = useAppStore((s) => s.toggleTask);
   const moveTask = useAppStore((s) => s.moveTask);
   const saveMood = useAppStore((s) => s.saveMood);
@@ -26,11 +27,42 @@ const MobileTodayForge: React.FC = () => {
   const [mobileEnergy, setMobileEnergy] = useState(() => todayMood?.energy ?? 5);
   const [isMoodPanelOpen, setIsMoodPanelOpen] = useState(() => !todayMood);
   const [moodFlash, setMoodFlash] = useState('');
+  const [isTaskComposerOpen, setIsTaskComposerOpen] = useState(false);
+  const [taskInput, setTaskInput] = useState('');
+  const taskInputRef = useRef<HTMLInputElement>(null);
   const todayReflection = reflections.find((reflection) => (reflection.kind ?? 'daily') === 'daily' && reflection.date === today);
   const todayPrinciple = [...principles].sort((a, b) => a.order - b.order)[0];
   const reflectionObstacle = todayReflection?.answers['q-obstacle'];
   const mainLine = activeCommitments[0]?.content ?? (reflectionObstacle ? String(reflectionObstacle) : '先定今天的主线');
   const completionRatio = todayTasks.length === 0 ? 0 : Math.round((completedCount / todayTasks.length) * 100);
+  const trimmedTaskInput = taskInput.trim();
+
+  useEffect(() => {
+    if (!isTaskComposerOpen) return;
+    const focusTimer = window.setTimeout(() => taskInputRef.current?.focus(), 80);
+    return () => window.clearTimeout(focusTimer);
+  }, [isTaskComposerOpen]);
+
+  useEffect(() => {
+    const visualViewport = window.visualViewport;
+    const shell = document.querySelector<HTMLElement>('.mobile-app-shell');
+    if (!isTaskComposerOpen || !visualViewport || !shell) return;
+
+    const updateMobileKeyboardInset = () => {
+      const keyboardInset = Math.max(0, window.innerHeight - visualViewport.height - visualViewport.offsetTop);
+      shell.style.setProperty('--mobile-keyboard-inset', `${Math.round(keyboardInset)}px`);
+    };
+
+    updateMobileKeyboardInset();
+    visualViewport.addEventListener('resize', updateMobileKeyboardInset);
+    visualViewport.addEventListener('scroll', updateMobileKeyboardInset);
+
+    return () => {
+      visualViewport.removeEventListener('resize', updateMobileKeyboardInset);
+      visualViewport.removeEventListener('scroll', updateMobileKeyboardInset);
+      shell.style.setProperty('--mobile-keyboard-inset', '0px');
+    };
+  }, [isTaskComposerOpen]);
 
   const adjustMobileMood = (amount: number) => {
     setMobileMood((value) => clampMoodScore(value + amount));
@@ -45,6 +77,18 @@ const MobileTodayForge: React.FC = () => {
     setIsMoodPanelOpen(false);
     setMoodFlash('状态已保存');
     window.setTimeout(() => setMoodFlash(''), 1800);
+  };
+
+  const closeTaskComposer = () => {
+    setTaskInput('');
+    setIsTaskComposerOpen(false);
+  };
+
+  const addTodayTask = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (trimmedTaskInput.length === 0) return;
+    addTask(trimmedTaskInput, today);
+    closeTaskComposer();
   };
 
   return (
@@ -196,6 +240,49 @@ const MobileTodayForge: React.FC = () => {
           )}
         </div>
       </section>
+
+      {!isTaskComposerOpen && (
+        <button
+          type="button"
+          className="mobile-task-fab"
+          aria-label="添加今日任务"
+          aria-controls="mobile-task-sheet"
+          aria-expanded={isTaskComposerOpen}
+          onClick={() => setIsTaskComposerOpen(true)}
+        >
+          +
+        </button>
+      )}
+
+      {isTaskComposerOpen && (
+        <form
+          id="mobile-task-sheet"
+          className="mobile-task-sheet"
+          aria-label="新增今日任务"
+          onSubmit={addTodayTask}
+        >
+          <div className="mobile-task-sheet-head">
+            <span>添加今日任务</span>
+            <strong>今天</strong>
+          </div>
+          <input
+            ref={taskInputRef}
+            className="mobile-task-input"
+            value={taskInput}
+            onChange={(event) => setTaskInput(event.target.value)}
+            placeholder="写下今天要推进的一件事"
+            aria-label="今日任务内容"
+          />
+          <div className="mobile-task-sheet-actions">
+            <button type="button" className="mobile-task-cancel" onClick={closeTaskComposer}>
+              取消
+            </button>
+            <button type="submit" className="mobile-task-submit" disabled={trimmedTaskInput.length === 0}>
+              添加任务
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 };

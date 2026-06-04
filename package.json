@@ -1,7 +1,7 @@
 {
   "name": "forge-os",
   "private": true,
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Forge-OS - Forge yourself —— 自己锻造自己",
   "author": "Forge-OS Contributors",
   "type": "module",

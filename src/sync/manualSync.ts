@@ -96,14 +96,6 @@ const isConfigReady = (config: CosSyncConfig): boolean =>
       (config.credentialProviderUrl?.trim() || hasDirectCredentials(config))
   );
 
-const compareUpdatedAt = (left?: string, right?: string): number | undefined => {
-  if (!left || !right) return undefined;
-  const leftTime = Date.parse(left);
-  const rightTime = Date.parse(right);
-  if (!Number.isFinite(leftTime) || !Number.isFinite(rightTime)) return undefined;
-  return leftTime - rightTime;
-};
-
 const revisionTimestamp = (now?: string): string => now ?? new Date().toISOString();
 
 const createLocalEnvelope = ({
@@ -208,15 +200,6 @@ export const runManualSync = async (input: RunManualSyncInput): Promise<ManualSy
       return await uploadLocal(input);
     }
 
-    const versionDelta = compareUpdatedAt(input.localUpdatedAt, remoteEnvelope.updatedAt);
-    if (versionDelta !== undefined) {
-      if (versionDelta >= 0) {
-        return await uploadLocal(input);
-      }
-
-      return await restoreRemote(remoteEnvelope, input.appVersion);
-    }
-
     const localEnvelope = await createLocalEnvelope(input);
     if (input.backupKey) {
       await input.client.uploadBackupSnapshot(input.backupKey, localEnvelope);
@@ -227,7 +210,7 @@ export const runManualSync = async (input: RunManualSyncInput): Promise<ManualSy
       localRevision: localEnvelope.revision,
       remoteRevision: remoteEnvelope.revision,
       backupKey: input.backupKey,
-      localUpdatedAt: localEnvelope.updatedAt,
+      localUpdatedAt: input.localUpdatedAt ?? localEnvelope.updatedAt,
       remoteUpdatedAt: remoteEnvelope.updatedAt,
       remoteEnvelope,
     };

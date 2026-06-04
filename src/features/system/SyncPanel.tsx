@@ -223,7 +223,7 @@ const SyncPanel: React.FC = () => {
           <div className="sync-status-meta font-caption">
             <span>最近同步：{syncStatus.lastSyncedAt ?? '暂无'}</span>
             <span>基线：{syncStatus.lastSyncedRevision ?? '暂无'}</span>
-            <span>本地版本：{syncStatus.lastLocalUpdatedAt ?? '已是最新'}</span>
+            <span>待上传本地变更：{syncStatus.lastLocalUpdatedAt ?? '无'}</span>
           </div>
           {displayError && <div className="font-caption sync-error">{displayError}</div>}
         </div>

@@ -1,7 +1,7 @@
 # 腾讯云COS数据同步 Specification
 
 ## Purpose
-TBD - created by archiving change req_安卓移动端COS同步_20260603. Update Purpose after archive.
+定义 Forge-OS 使用腾讯云 COS 进行本地优先数据备份、恢复、跨端同步、冲突检测和同步状态展示的要求。
 ## Requirements
 ### Requirement: COS sync can be configured safely / COS 同步可安全配置
 
@@ -88,6 +88,14 @@ TBD - created by archiving change req_安卓移动端COS同步_20260603. Update 
 - **THEN** 系统标记同步冲突
 - **AND** 系统在覆盖前创建本地冲突备份
 
+#### Scenario: Timestamp order does not auto-resolve cross-device conflict / 时间戳先后不自动解决跨设备冲突
+
+- **WHEN** 本地快照基线 revision 与 COS 当前 revision 不一致
+- **AND** 本地和远端来自不同设备且都发生变化
+- **AND** 其中一端的 updatedAt 晚于另一端
+- **THEN** 系统 MUST 标记同步冲突
+- **AND** 系统 MUST NOT 仅根据 updatedAt 自动上传本地或恢复云端
+
 #### Scenario: Same device revision drift does not conflict / 同设备 revision 漂移不触发冲突
 
 - **WHEN** 本地快照基线 revision 与 COS 当前 revision 不一致
@@ -111,6 +119,12 @@ TBD - created by archiving change req_安卓移动端COS同步_20260603. Update 
 - **WHEN** 用户打开系统页的数据同步区域
 - **THEN** 系统显示同步是否启用、最近同步时间、最近错误和当前设备 ID
 - **AND** 用户可以手动触发立即同步
+
+#### Scenario: User sees pending local change status / 用户看到待上传本地变更状态
+
+- **WHEN** 本地存在尚未上传或待处理的本地变更
+- **THEN** 系统 MUST 以“待上传本地变更”语义展示该时间
+- **AND** 系统 MUST NOT 将存在本地变更的状态显示为“已是最新”
 
 #### Scenario: Saved configuration is collapsed after save / 保存配置后收起表单
 

@@ -7,12 +7,14 @@ const repoRoot = process.cwd();
 const read = (filePath: string) => fs.readFileSync(path.join(repoRoot, filePath), 'utf-8');
 
 test('Android project bundles Vite assets through a WebView app shell', () => {
-  const pkg = JSON.parse(read('package.json')) as { scripts: Record<string, string> };
+  const pkg = JSON.parse(read('package.json')) as { scripts: Record<string, string>; version: string };
   const manifest = read('android/app/src/main/AndroidManifest.xml');
   const appGradle = read('android/app/build.gradle');
   const mainActivity = read('android/app/src/main/java/com/forgeos/app/MainActivity.java');
   const buildScript = read('scripts/run-android-build.mjs');
 
+  assert.match(appGradle, new RegExp(`versionName '${pkg.version}'`));
+  assert.match(appGradle, /versionCode 5/);
   assert.match(pkg.scripts['android:build'], /run-android-build\.mjs/);
   assert.match(pkg.scripts['android:install'], /run-android-install\.mjs/);
   assert.match(buildScript, /JAVA_HOME/);
@@ -58,7 +60,15 @@ test('Android WebView honors viewport meta so high-density phones use mobile CSS
   assert.match(indexHtml, /<meta name="viewport" content="width=device-width, initial-scale=1\.0" \/>/);
   assert.match(mainActivity, /settings\.setUseWideViewPort\(true\)/);
   assert.match(mainActivity, /settings\.setLoadWithOverviewMode\(false\)/);
-  assert.match(mainActivity, /settings\.setTextZoom\(100\)/);
+  assert.doesNotMatch(mainActivity, /settings\.setTextZoom\(100\)/);
+});
+
+test('Android app lets the system resize around keyboards and accessibility font scaling', () => {
+  const manifest = read('android/app/src/main/AndroidManifest.xml');
+  const mainActivity = read('android/app/src/main/java/com/forgeos/app/MainActivity.java');
+
+  assert.match(manifest, /android:windowSoftInputMode="adjustResize"/);
+  assert.doesNotMatch(mainActivity, /settings\.setTextZoom\(100\)/);
 });
 
 test('Android launcher icon uses the ALO pixel logo mipmap assets', () => {
