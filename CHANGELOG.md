@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-06-04
+
+### Added
+- 新增 Android App 工程，支持打包内置 Vite 生产资源的 Forge-OS 移动端应用。
+- 新增 `npm run android:build`、`npm run android:install` 和 `npm run android:smoke`，用于构建、安装和采集 Android 冒烟测试截图。
+- 新增移动端专用工作台，提供“今日、推进、记录、系统”底部导航，并复用桌面端同一套本地数据。
+- 新增腾讯云 COS 数据同步能力，支持签名服务和本机手动密钥两种授权方式。
+- 新增 COS 主同步对象、历史备份快照、冲突推荐、首次同步选择、启动同步和本地变更自动同步。
+- 新增 `npm run cos:signer` 签名服务脚本和 `.env.example` 配置模板。
+
+### Changed
+- 系统页新增 COS 数据同步面板，并在数据备份区域展示当前平台只读本机存储地址。
+- 桌面端左侧导航加入“月度 OKR”，系统入口和风格/模块/主题工具收敛到底部区域。
+- 模块管理、周看板、周复盘、反思库和系统页补充移动端样式，减少窄屏重叠和横向溢出。
+- OpenSpec 正式规格同步 Android 应用、Android 冒烟测试、腾讯云 COS 同步和本地优先持久化要求。
+
+### Fixed
+- 云同步快照排除手动 Access Key 和 Secret Access Key，避免密钥进入云端载荷。
+- COS 同步失败时保留本地数据和导入导出入口，继续维持本地优先使用体验。
+- 补齐归档 change `2026-06-02-fix_风格切换不改变页面形态_20260602` 的 `design.md` 和 `tasks.md`。
+
 ## [1.0.2] - 2026-06-03
 
 ### Changed
