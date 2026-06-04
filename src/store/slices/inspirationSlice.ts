@@ -3,7 +3,7 @@ import type { Inspiration } from '../../types';
 
 export interface InspirationSlice {
   inspirations: Inspiration[];
-  addInspiration: (inspiration: Omit<Inspiration, 'id' | 'createdAt'>) => void;
+  addInspiration: (inspiration: Omit<Inspiration, 'id' | 'createdAt'>) => string;
   deleteInspiration: (id: string) => void;
   convertToTask: (inspirationId: string, taskId: string) => void;
 }
@@ -13,13 +13,16 @@ const generateId = () => Math.random().toString(36).substring(2, 9);
 export const createInspirationSlice: StateCreator<InspirationSlice> = (set) => ({
   inspirations: [],
 
-  addInspiration: (inspiration) =>
+  addInspiration: (inspiration) => {
+    const id = generateId();
     set((state) => ({
       inspirations: [
         ...state.inspirations,
-        { ...inspiration, id: generateId(), createdAt: new Date().toISOString() },
+        { ...inspiration, id, createdAt: new Date().toISOString() },
       ],
-    })),
+    }));
+    return id;
+  },
 
   deleteInspiration: (id) =>
     set((state) => ({

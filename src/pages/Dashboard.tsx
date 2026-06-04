@@ -8,6 +8,7 @@ import MoodTrackerPanel from '../features/mood/MoodTrackerPanel';
 import TimeBlockPanel from '../features/timeblocks/TimeBlockPanel';
 import InspirationVaultPanel from '../features/inspiration/InspirationVaultPanel';
 import ReflectionQuickEntry from '../features/reflections/ReflectionQuickEntry';
+import MonkQuote from '../features/system/MonkQuote';
 import MiniCalendar from '../components/MiniCalendar';
 import AsciiBox from '../components/AsciiBox';
 import { useAppStore } from '../store/useAppStore';
@@ -44,8 +45,24 @@ const Dashboard: React.FC = () => {
             <TaskBoard />
           </section>
 
+          <section className="dashboard-today-strip" aria-label="今日执行">
+            <AsciiBox title="今日进度" className="dashboard-status-card dashboard-status-card--progress">
+              <TodayProgress />
+            </AsciiBox>
+
+            <AsciiBox title="每日反思" className="dashboard-status-card dashboard-status-card--reflection">
+              <ReflectionQuickEntry />
+            </AsciiBox>
+
+            {isEnabled('timeBlocks') && <TimeBlockPanel />}
+
+            {isEnabled('mood') && <MoodTrackerPanel />}
+          </section>
+
           <section className="dashboard-support-grid" aria-label="辅助沉淀">
             {isEnabled('principles') && <PrinciplesPanel />}
+
+            <MonkQuote />
 
             {isEnabled('calendar') && (
               <AsciiBox title="日历">
@@ -60,20 +77,6 @@ const Dashboard: React.FC = () => {
             {isEnabled('inspiration') && <InspirationVaultPanel />}
           </section>
         </div>
-
-        <aside className="dashboard-side-panel" aria-label="今日执行">
-          <AsciiBox title="今日进度" className="dashboard-status-card dashboard-status-card--progress">
-            <TodayProgress />
-          </AsciiBox>
-
-          <AsciiBox title="每日反思" className="dashboard-status-card dashboard-status-card--reflection">
-            <ReflectionQuickEntry />
-          </AsciiBox>
-
-          {isEnabled('timeBlocks') && <TimeBlockPanel />}
-
-          {isEnabled('mood') && <MoodTrackerPanel />}
-        </aside>
       </div>
 
     </div>

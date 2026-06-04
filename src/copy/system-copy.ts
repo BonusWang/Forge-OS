@@ -44,7 +44,7 @@ export const systemCopy = {
   },
 
   about: {
-    title: '关于 Forge-OS',
+    title: '关于与更新',
     appName: 'Forge-OS',
     description: '一个面向个人目标确认与成长复盘的生活管理系统。Forge yourself —— 自己锻造自己。',
     author: 'Forge-OS Contributors',

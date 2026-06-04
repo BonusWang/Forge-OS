@@ -110,7 +110,7 @@ const WeeklyReviewEditor: React.FC<WeeklyReviewEditorProps> = ({
         <button
           onClick={handleSave}
           disabled={!canSave}
-          className="font-caption"
+          className="font-caption weekly-review-save-button"
           style={{
             background: canSave ? 'var(--text-primary)' : 'var(--bg-tertiary)',
             border: `1px solid ${canSave ? 'var(--text-primary)' : 'var(--border-primary)'}`,
@@ -151,21 +151,21 @@ const WeeklyReviewPage: React.FC<WeeklyReviewPageProps> = ({
             <div className="weekly-review-nav-actions">
               <button
                 onClick={() => setWeekStart(getPrevWeekStart(weekStart))}
-                className="font-caption"
+                className="font-caption weekly-review-nav-button"
                 style={navButtonStyle}
               >
                 上一周
               </button>
               <button
                 onClick={() => setWeekStart(getWeekStart())}
-                className="font-caption"
+                className="font-caption weekly-review-nav-button"
                 style={navButtonStyle}
               >
                 本周
               </button>
               <button
                 onClick={() => setWeekStart(getNextWeekStart(weekStart))}
-                className="font-caption"
+                className="font-caption weekly-review-nav-button"
                 style={navButtonStyle}
               >
                 下一周
@@ -182,7 +182,7 @@ const WeeklyReviewPage: React.FC<WeeklyReviewPageProps> = ({
                 <button
                   key={review.id}
                   onClick={() => review.periodStart && setWeekStart(review.periodStart)}
-                  className="font-caption"
+                  className="font-caption weekly-review-history-button"
                   style={{
                     ...navButtonStyle,
                     width: '100%',
@@ -215,7 +215,7 @@ const WeeklyReviewPage: React.FC<WeeklyReviewPageProps> = ({
             >
               完成 {completed.length} 项 / 未完成 {active.length} 项
             </div>
-            <div style={{ display: 'grid', gap: 'var(--space-1)' }}>
+            <div className="weekly-review-evidence-list" style={{ display: 'grid', gap: 'var(--space-1)' }}>
               {weekTasks.length === 0 ? (
                 <div className="font-body" style={{ color: 'var(--text-muted)' }}>
                   本周暂无任务

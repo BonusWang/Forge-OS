@@ -3,40 +3,36 @@ import AsciiBox from '../components/AsciiBox';
 import UpdatePanel from '../features/system/UpdatePanel';
 import DataBackupPanel from '../features/system/DataBackupPanel';
 import SyncPanel from '../features/system/SyncPanel';
-import MonkQuote from '../features/system/MonkQuote';
 import { systemCopy } from '../copy/system-copy';
 
 const System: React.FC = () => {
   return (
     <div className="workspace-page system-page">
       <section className="system-layout workspace-grid workspace-grid--system">
-        <div className="system-column system-column--operations">
-          <UpdatePanel />
-          <DataBackupPanel />
-          <SyncPanel />
-        </div>
-
         <div className="system-column system-column--identity">
-          <AsciiBox title={systemCopy.about.title}>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 'var(--space-3)',
-              }}
-            >
-              <div className="font-h2" style={{ color: 'var(--accent-gold)' }}>
-                {systemCopy.about.appName}
+          <AsciiBox title={systemCopy.about.title} className="system-about-update-card">
+            <div className="system-about-update">
+              <div className="system-about-copy">
+                <div className="font-h2" style={{ color: 'var(--accent-gold)' }}>
+                  {systemCopy.about.appName}
+                </div>
+                <div className="font-body" style={{ color: 'var(--text-secondary)' }}>
+                  {systemCopy.about.description}
+                </div>
+                <div className="font-caption" style={{ color: 'var(--text-muted)' }}>
+                  {systemCopy.about.author} · {systemCopy.about.license}
+                </div>
               </div>
-              <div className="font-body" style={{ color: 'var(--text-secondary)' }}>
-                {systemCopy.about.description}
-              </div>
-              <div className="font-caption" style={{ color: 'var(--text-muted)' }}>
-                {systemCopy.about.author} · {systemCopy.about.license}
+              <div className="system-update-embed">
+                <UpdatePanel embedded />
               </div>
             </div>
           </AsciiBox>
-          <MonkQuote />
+          <DataBackupPanel />
+        </div>
+
+        <div className="system-column system-column--operations">
+          <SyncPanel />
         </div>
       </section>
     </div>

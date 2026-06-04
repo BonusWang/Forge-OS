@@ -129,6 +129,7 @@ const SyncPanel: React.FC = () => {
           deviceId,
           lastSyncedAt: new Date().toISOString(),
           lastSyncedRevision: result.revision,
+          lastLocalUpdatedAt: undefined,
         },
       });
       return;
@@ -139,6 +140,7 @@ const SyncPanel: React.FC = () => {
       phase: 'success',
       lastSyncedAt: new Date().toISOString(),
       lastSyncedRevision: result.revision,
+      lastLocalUpdatedAt: undefined,
       lastError: undefined,
       conflict: undefined,
     });
@@ -175,7 +177,8 @@ const SyncPanel: React.FC = () => {
       deviceId: syncStatus.deviceId,
       storageRecord: createStorageRecordFromAppState(state),
       lastSyncedRevision: syncStatus.lastSyncedRevision,
-      hasLocalChanges: true,
+      hasLocalChanges: Boolean(syncStatus.lastLocalUpdatedAt),
+      localUpdatedAt: syncStatus.lastLocalUpdatedAt,
       firstSyncMode,
     });
 
@@ -220,6 +223,7 @@ const SyncPanel: React.FC = () => {
           <div className="sync-status-meta font-caption">
             <span>最近同步：{syncStatus.lastSyncedAt ?? '暂无'}</span>
             <span>基线：{syncStatus.lastSyncedRevision ?? '暂无'}</span>
+            <span>本地版本：{syncStatus.lastLocalUpdatedAt ?? '已是最新'}</span>
           </div>
           {displayError && <div className="font-caption sync-error">{displayError}</div>}
         </div>

@@ -39,6 +39,28 @@ test('Android app exposes private file storage instead of relying on WebView loc
   assert.match(types, /androidStorage\?:/);
 });
 
+test('Android WebView applies system bar insets so mobile UI is not covered by status bars', () => {
+  const mainActivity = read('android/app/src/main/java/com/forgeos/app/MainActivity.java');
+
+  assert.match(mainActivity, /setOnApplyWindowInsetsListener/);
+  assert.match(mainActivity, /WindowInsets\.Type\.systemBars\(\)/);
+  assert.match(mainActivity, /setPadding\(0,\s*topInset,\s*0,\s*bottomInset\)/);
+  assert.match(mainActivity, /FrameLayout/);
+  assert.match(mainActivity, /root\.addView\(webView/);
+  assert.match(mainActivity, /applySystemBarInsets\(root\)/);
+  assert.doesNotMatch(mainActivity, /applySystemBarInsets\(webView\)/);
+});
+
+test('Android WebView honors viewport meta so high-density phones use mobile CSS', () => {
+  const mainActivity = read('android/app/src/main/java/com/forgeos/app/MainActivity.java');
+  const indexHtml = read('index.html');
+
+  assert.match(indexHtml, /<meta name="viewport" content="width=device-width, initial-scale=1\.0" \/>/);
+  assert.match(mainActivity, /settings\.setUseWideViewPort\(true\)/);
+  assert.match(mainActivity, /settings\.setLoadWithOverviewMode\(false\)/);
+  assert.match(mainActivity, /settings\.setTextZoom\(100\)/);
+});
+
 test('Android launcher icon uses the ALO pixel logo mipmap assets', () => {
   const manifest = read('android/app/src/main/AndroidManifest.xml');
 

@@ -61,6 +61,7 @@ export interface SyncStatus {
   deviceId: string;
   lastSyncedAt?: string;
   lastSyncedRevision?: string;
+  lastLocalUpdatedAt?: string;
   lastError?: string;
   conflict?: SyncConflictState;
 }

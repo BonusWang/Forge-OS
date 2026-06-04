@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import ReflectionGrid from '../features/reflections/ReflectionGrid';
 import ReflectionDetailModal from '../features/reflections/ReflectionDetailModal';
-import OKRPanel from '../features/okr/OKRPanel';
 import AbilityReader from '../features/abilities/AbilityReader';
 import AbilityTraining from '../features/abilities/AbilityTraining';
 import AsciiBox from '../components/AsciiBox';
@@ -12,10 +11,6 @@ const ReflectionPage: React.FC = () => {
 
   return (
     <div className="workspace-page reflection-page">
-      <section className="workspace-section reflection-okr-section">
-        <OKRPanel />
-      </section>
-
       <section
         className="reflection-grid workspace-grid workspace-grid--reflection"
         aria-label="反思库与能力训练"

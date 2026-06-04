@@ -209,6 +209,7 @@ const DataBackupPanel: React.FC = () => {
           deviceId,
           lastSyncedAt: new Date().toISOString(),
           lastSyncedRevision: result.revision,
+          lastLocalUpdatedAt: undefined,
         },
       });
     } else {
@@ -216,6 +217,7 @@ const DataBackupPanel: React.FC = () => {
         phase: 'success',
         lastSyncedAt: new Date().toISOString(),
         lastSyncedRevision: result.revision,
+        lastLocalUpdatedAt: undefined,
         lastError: undefined,
         conflict: undefined,
       });

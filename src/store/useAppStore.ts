@@ -38,26 +38,69 @@ export type AppStore = TaskSlice &
     __version: string;
   };
 
+type LocalSyncDataKey = Exclude<keyof AppState, 'syncConfig' | 'syncStatus' | '__version'>;
+
+const LOCAL_SYNC_DATA_KEYS: LocalSyncDataKey[] = [
+  'tasks',
+  'calendarEvents',
+  'principles',
+  'abilities',
+  'reflections',
+  'entertainments',
+  'objectives',
+  'inboxItems',
+  'config',
+  'enabledModules',
+  'habits',
+  'moods',
+  'timeBlocks',
+  'inspirations',
+  'reflectionTemplates',
+];
+
+const didLocalDataChange = (before: AppStore, after: AppStore): boolean =>
+  LOCAL_SYNC_DATA_KEYS.some((key) => before[key] !== after[key]);
+
 export const useAppStore = create<AppStore>()(
   persist<AppStore, [], [], AppState>(
-    (...args) => ({
-      ...createTaskSlice(...args),
-      ...createCalendarSlice(...args),
-      ...createPrincipleSlice(...args),
-      ...createAbilitySlice(...args),
-      ...createReflectionSlice(...args),
-      ...createEntertainmentSlice(...args),
-      ...createConfigSlice(...args),
-      ...createOKRSlice(...args),
-      ...createModuleSlice(...args),
-      ...createHabitSlice(...args),
-      ...createMoodSlice(...args),
-      ...createTimeBlockSlice(...args),
-      ...createInspirationSlice(...args),
-      ...createReflectionTemplateSlice(...args),
-      ...createSyncSlice(...args),
-      __version: CURRENT_APP_VERSION,
-    }),
+    (set, get, api) => {
+      const rawSet = set as unknown as (partial: Parameters<typeof set>[0], replace?: boolean) => void;
+      const setWithLocalChange = ((partial: Parameters<typeof set>[0], replace?: boolean) => {
+        const before = get();
+        rawSet(partial, replace);
+        const after = get();
+
+        if (didLocalDataChange(before, after)) {
+          set((state) => ({
+            syncStatus: {
+              ...state.syncStatus,
+              lastLocalUpdatedAt: new Date().toISOString(),
+            },
+          }));
+        }
+      }) as typeof set;
+
+      const args = [setWithLocalChange, get, api] as [typeof set, typeof get, typeof api];
+
+      return {
+        ...createTaskSlice(...args),
+        ...createCalendarSlice(...args),
+        ...createPrincipleSlice(...args),
+        ...createAbilitySlice(...args),
+        ...createReflectionSlice(...args),
+        ...createEntertainmentSlice(...args),
+        ...createConfigSlice(...args),
+        ...createOKRSlice(...args),
+        ...createModuleSlice(...args),
+        ...createHabitSlice(...args),
+        ...createMoodSlice(...args),
+        ...createTimeBlockSlice(...args),
+        ...createInspirationSlice(...args),
+        ...createReflectionTemplateSlice(...args),
+        ...createSyncSlice(...args),
+        __version: CURRENT_APP_VERSION,
+      };
+    },
     {
       name: 'alo-storage',
       storage: platformStorage as PersistStorage<AppState>,

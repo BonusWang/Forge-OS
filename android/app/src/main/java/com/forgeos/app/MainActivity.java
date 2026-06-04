@@ -5,13 +5,18 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
+import android.graphics.Insets;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowInsets;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
 
 import androidx.webkit.WebViewAssetLoader;
 
@@ -30,12 +35,21 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        FrameLayout root = new FrameLayout(this);
         webView = new WebView(this);
+        root.addView(webView, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+        ));
+        applySystemBarInsets(root);
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(false);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
+        settings.setUseWideViewPort(true);
+        settings.setLoadWithOverviewMode(false);
+        settings.setTextZoom(100);
 
         if ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
             WebView.setWebContentsDebuggingEnabled(true);
@@ -54,7 +68,25 @@ public class MainActivity extends Activity {
         webView.addJavascriptInterface(new AndroidStorageBridge(this), "androidStorage");
         webView.loadUrl("https://appassets.androidplatform.net/assets/web/index.html");
 
-        setContentView(webView);
+        setContentView(root);
+        root.post(root::requestApplyInsets);
+    }
+
+    private void applySystemBarInsets(View view) {
+        view.setOnApplyWindowInsetsListener((target, insets) -> {
+            int topInset;
+            int bottomInset;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                Insets systemBars = insets.getInsets(WindowInsets.Type.systemBars());
+                topInset = systemBars.top;
+                bottomInset = systemBars.bottom;
+            } else {
+                topInset = insets.getSystemWindowInsetTop();
+                bottomInset = insets.getSystemWindowInsetBottom();
+            }
+            target.setPadding(0, topInset, 0, bottomInset);
+            return insets;
+        });
     }
 
     @Override

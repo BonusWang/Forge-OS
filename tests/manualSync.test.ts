@@ -77,6 +77,29 @@ test('runManualSync reports not-configured when sync is disabled', async () => {
   assert.deepEqual(result, { phase: 'not-configured' });
 });
 
+test('runManualSync accepts direct COS credentials as a valid config', async () => {
+  const { client, uploaded } = createClient(null);
+
+  const result = await runManualSync({
+    config: {
+      ...config,
+      credentialProviderUrl: '',
+      accessKeyId: 'AKIDEXAMPLE',
+      secretAccessKey: 'SECRETEXAMPLE',
+    },
+    client,
+    key: 'Forge-OS_Base/Domain1127/alo-data.sync.json',
+    appVersion: '1.0.2',
+    deviceId: 'device-1',
+    storageRecord,
+    now: '2026-06-03T00:00:00.000Z',
+  });
+
+  assert.equal(result.phase, 'success');
+  assert.equal(result.action, 'uploaded');
+  assert.equal(uploaded.length, 1);
+});
+
 test('runManualSync uploads local snapshot when remote is empty', async () => {
   const { client, uploaded } = createClient(null);
 
@@ -211,6 +234,63 @@ test('runManualSync marks conflict and backs up local data before overwrite', as
   assert.equal(result.phase, 'conflict');
   assert.equal(uploaded.length, 1);
   assert.equal(uploaded[0].backup, true);
+});
+
+test('runManualSync uploads local data when the local version is newer than the cloud version', async () => {
+  const remote = await createSyncEnvelope({
+    appVersion: '1.0.2',
+    deviceId: 'device-2',
+    revision: 'remote-2',
+    updatedAt: '2026-06-03T09:00:00.000Z',
+    storageRecord,
+  });
+  const { client, uploaded } = createClient(remote);
+
+  const result = await runManualSync({
+    config,
+    client,
+    key: 'Forge-OS_Base/Domain1127/alo-data.sync.json',
+    appVersion: '1.0.2',
+    deviceId: 'device-1',
+    storageRecord,
+    lastSyncedRevision: 'remote-1',
+    hasLocalChanges: true,
+    localUpdatedAt: '2026-06-03T10:00:00.000Z',
+    now: '2026-06-03T10:02:00.000Z',
+  });
+
+  assert.equal(result.phase, 'success');
+  assert.equal(result.action, 'uploaded');
+  assert.equal(uploaded.length, 1);
+  assert.equal(uploaded[0].backup, false);
+});
+
+test('runManualSync restores cloud data when the cloud version is newer than the local version', async () => {
+  const remote = await createSyncEnvelope({
+    appVersion: '1.0.2',
+    deviceId: 'device-2',
+    revision: 'remote-2',
+    updatedAt: '2026-06-03T11:00:00.000Z',
+    storageRecord,
+  });
+  const { client, uploaded } = createClient(remote);
+
+  const result = await runManualSync({
+    config,
+    client,
+    key: 'Forge-OS_Base/Domain1127/alo-data.sync.json',
+    appVersion: '1.0.2',
+    deviceId: 'device-1',
+    storageRecord,
+    lastSyncedRevision: 'remote-1',
+    hasLocalChanges: true,
+    localUpdatedAt: '2026-06-03T10:00:00.000Z',
+  });
+
+  assert.equal(result.phase, 'success');
+  assert.equal(result.action, 'restored');
+  assert.equal(result.revision, 'remote-2');
+  assert.equal(uploaded.length, 0);
 });
 
 test('runManualSync does not conflict with a newer remote revision from the same device', async () => {

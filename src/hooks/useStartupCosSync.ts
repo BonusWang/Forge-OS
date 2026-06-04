@@ -56,6 +56,7 @@ const applyStartupResult = (result: ManualSyncResult) => {
         deviceId,
         lastSyncedAt: new Date().toISOString(),
         lastSyncedRevision: result.revision,
+        lastLocalUpdatedAt: undefined,
       },
     });
     return;
@@ -65,6 +66,7 @@ const applyStartupResult = (result: ManualSyncResult) => {
     phase: 'success',
     lastSyncedAt: new Date().toISOString(),
     lastSyncedRevision: result.revision,
+    lastLocalUpdatedAt: undefined,
     lastError: undefined,
     conflict: undefined,
   });
@@ -106,7 +108,8 @@ export const useStartupCosSync = () => {
         deviceId: syncStatus.deviceId,
         storageRecord: createStorageRecordFromAppState(state),
         lastSyncedRevision: syncStatus.lastSyncedRevision,
-        hasLocalChanges: true,
+        hasLocalChanges: Boolean(syncStatus.lastLocalUpdatedAt),
+        localUpdatedAt: syncStatus.lastLocalUpdatedAt,
       });
 
       applyStartupResult(result);

@@ -198,39 +198,41 @@ const TaskBoard: React.FC = () => {
           )}
         </div>
 
-        <div
-          className="task-board-scroll"
-          style={{
-            display: 'flex',
-            gap: 'var(--space-2)',
-            overflowX: 'auto',
-            paddingBottom: 'var(--space-2)',
-          }}
-        >
-          <TaskColumn
-            key="BACKLOG"
-            date="BACKLOG"
-            column="MON"
-            tasks={getDateTasks('BACKLOG')}
-            title="收纳箱"
-            dateLabel=""
-            isBacklog={true}
-          />
-          {weekDates.map((date) => {
-            const dayColumn = getDayColumnFromDate(new Date(date));
-            return (
-              <TaskColumn
-                key={date}
-                date={date}
-                column={dayColumn}
-                tasks={getDateTasks(date)}
-                title={DAY_LABELS[dayColumn]}
-                dateLabel={format(new Date(date), 'MM/dd')}
-                isBacklog={false}
-              />
-            );
-          })}
-          <OKRInboxColumn />
+        <div className="task-board-scroll-shell">
+          <div
+            className="task-board-scroll"
+            style={{
+              display: 'flex',
+              gap: 'var(--space-2)',
+              overflowX: 'auto',
+              paddingBottom: 'var(--space-2)',
+            }}
+          >
+            <TaskColumn
+              key="BACKLOG"
+              date="BACKLOG"
+              column="MON"
+              tasks={getDateTasks('BACKLOG')}
+              title="收纳箱"
+              dateLabel=""
+              isBacklog={true}
+            />
+            {weekDates.map((date) => {
+              const dayColumn = getDayColumnFromDate(new Date(date));
+              return (
+                <TaskColumn
+                  key={date}
+                  date={date}
+                  column={dayColumn}
+                  tasks={getDateTasks(date)}
+                  title={DAY_LABELS[dayColumn]}
+                  dateLabel={format(new Date(date), 'MM/dd')}
+                  isBacklog={false}
+                />
+              );
+            })}
+            <OKRInboxColumn />
+          </div>
         </div>
       </div>
     </DndContext>

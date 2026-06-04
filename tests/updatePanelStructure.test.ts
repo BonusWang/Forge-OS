@@ -30,3 +30,11 @@ test('checking updates uses a casual fallback list when the request fails', () =
   assert.match(copy, /'开发者说，没打听到消息。可能网络在摆烂，也可能发布通道还没修好。'/);
   assert.match(panel, /pickUpdateErrorCopy/);
 });
+
+test('app skips automatic GitHub update checks outside packaged desktop contexts', () => {
+  const app = read('src/App.tsx');
+
+  assert.match(app, /canAutoCheckUpdates/);
+  assert.match(app, /window\.electronAPI\?\.getAppVersion/);
+  assert.match(app, /if \(!canAutoCheckUpdates\(\)\) return/);
+});

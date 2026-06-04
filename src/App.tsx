@@ -3,9 +3,12 @@ import Dashboard from './pages/Dashboard';
 import Reflection from './pages/Reflection';
 import System from './pages/System';
 import WeeklyReview from './pages/WeeklyReview';
+import MonthlyOKR from './pages/MonthlyOKR';
 import ModulePicker from './features/modules/ModulePicker';
+import MobileAppShell from './features/mobile/MobileAppShell';
 import { useWeekCleanup } from './hooks/useWeekCleanup';
 import { useStartupCosSync } from './hooks/useStartupCosSync';
+import { useAutoCosSync } from './hooks/useAutoCosSync';
 import { useDocumentTitle } from './hooks/useDocumentTitle';
 import { useAppStore } from './store/useAppStore';
 import { checkUpdate, APP_VERSION } from './utils/checkUpdate';
@@ -52,8 +55,10 @@ const supabaseStyleTokens = {
 const lastWordsMessage =
   systemCopy.lastWords[Math.floor(Math.random() * systemCopy.lastWords.length)] ?? '';
 
+const canAutoCheckUpdates = () => Boolean(window.electronAPI?.getAppVersion);
+
 function App() {
-  const [page, setPage] = useState<'dashboard' | 'reflection' | 'weeklyReview' | 'system'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'reflection' | 'weeklyReview' | 'monthlyOKR' | 'system'>('dashboard');
   const [weeklyReviewWeekStart, setWeeklyReviewWeekStart] = useState('');
   const [visualStyle, setVisualStyle] = useState<VisualStyle>('classic');
   const [modulePickerOpen, setModulePickerOpen] = useState(false);
@@ -69,10 +74,13 @@ function App() {
 
   useWeekCleanup();
   useStartupCosSync();
+  useAutoCosSync();
   useDocumentTitle();
 
   // Check for updates on mount
   useEffect(() => {
+    if (!canAutoCheckUpdates()) return;
+
     let cancelled = false;
     const doCheck = async () => {
       const v = window.electronAPI?.getAppVersion?.() ?? APP_VERSION;
@@ -144,7 +152,9 @@ function App() {
         ...activeStyleTokens,
       }}
     >
-      <div className="app-frame">
+      <ModulePicker isOpen={modulePickerOpen} onClose={() => setModulePickerOpen(false)} />
+
+      <div className="app-frame desktop-app-frame">
         <aside className="app-rail" aria-label="Forge-OS navigation">
           <div className="app-rail-brand font-display notranslate" translate="no">
             <img src={resources.logoPixel} alt="" className="app-brand-mark" />
@@ -166,7 +176,7 @@ function App() {
               aria-current={page === 'dashboard' ? 'page' : undefined}
               title={aloCopy.nav.dashboardHover}
             >
-              <span className="app-rail-index">01</span>
+              <span className="app-rail-icon" aria-hidden="true">▦</span>
               <span className="app-rail-label">周看板</span>
             </button>
             <button
@@ -178,7 +188,7 @@ function App() {
               className="app-rail-button"
               aria-current={page === 'weeklyReview' ? 'page' : undefined}
             >
-              <span className="app-rail-index">02</span>
+              <span className="app-rail-icon" aria-hidden="true">↺</span>
               <span className="app-rail-label">周复盘</span>
             </button>
             <button
@@ -188,64 +198,80 @@ function App() {
               aria-current={page === 'reflection' ? 'page' : undefined}
               title={aloCopy.nav.reflectionHover}
             >
-              <span className="app-rail-index">03</span>
+              <span className="app-rail-icon" aria-hidden="true">◧</span>
               <span className="app-rail-label">反思库</span>
             </button>
             <button
               type="button"
-              onClick={() => setPage('system')}
+              onClick={() => setPage('monthlyOKR')}
               className="app-rail-button"
-              aria-current={page === 'system' ? 'page' : undefined}
-              title={aloCopy.nav.systemHover}
+              aria-current={page === 'monthlyOKR' ? 'page' : undefined}
             >
-              <span className="app-rail-index">04</span>
-              <span className="app-rail-label">系统</span>
-              {hasUpdate && <span className="app-rail-badge">{systemCopy.nav.hasUpdateMarker}</span>}
+              <span className="app-rail-icon" aria-hidden="true">◎</span>
+              <span className="app-rail-label">月度 OKR</span>
             </button>
           </div>
 
-          <div className="app-rail-section app-rail-section--tools" aria-label="工具">
-            <button
-              type="button"
-              onClick={toggleVisualStyle}
-              className="app-rail-button"
-              aria-pressed={visualStyle !== 'classic'}
-              title={`当前风格：${visualStyleLabel}。点击切换复古、Orbit、Supabase 风格`}
-            >
-              <span className="app-rail-index">
-                {visualStyle === 'supabase' ? 'S' : visualStyle === 'orbit' ? 'O' : '◇'}
-              </span>
-              <span className="app-rail-label">风格</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setModulePickerOpen(true)}
-              className="app-rail-button"
-              title={aloCopy.nav.moduleHover}
-            >
-              <span className="app-rail-index">⊕</span>
-              <span className="app-rail-label">模块</span>
-            </button>
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="app-rail-button"
-              title={aloCopy.nav.themeHover}
-            >
-              <span className="app-rail-index">{config.theme === 'dark' ? '◐' : '◑'}</span>
-              <span className="app-rail-label">主题</span>
-            </button>
+          <div className="app-rail-bottom">
+            <div className="app-rail-section app-rail-section--system" aria-label="系统">
+              <button
+                type="button"
+                onClick={() => setPage('system')}
+                className="app-rail-button"
+                aria-current={page === 'system' ? 'page' : undefined}
+                title={aloCopy.nav.systemHover}
+              >
+                <span className="app-rail-icon" aria-hidden="true">⚙</span>
+                <span className="app-rail-label">系统</span>
+                {hasUpdate && <span className="app-rail-badge">{systemCopy.nav.hasUpdateMarker}</span>}
+              </button>
+            </div>
+
+            <div className="app-rail-section app-rail-section--tools" aria-label="工具">
+              <button
+                type="button"
+                onClick={toggleVisualStyle}
+                className="app-rail-button"
+                aria-label={`切换视觉风格，当前：${visualStyleLabel}`}
+                aria-pressed={visualStyle !== 'classic'}
+                title={`当前风格：${visualStyleLabel}。点击切换复古、Orbit、Supabase 风格`}
+              >
+                <span className="app-rail-index">
+                  {visualStyle === 'supabase' ? 'S' : visualStyle === 'orbit' ? 'O' : '◇'}
+                </span>
+                <span className="app-rail-label">风格</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setModulePickerOpen(true)}
+                className="app-rail-button"
+                aria-label="打开模块管理"
+                title={aloCopy.nav.moduleHover}
+              >
+                <span className="app-rail-index">⊕</span>
+                <span className="app-rail-label">模块</span>
+              </button>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="app-rail-button"
+                aria-label="切换明暗主题"
+                title={aloCopy.nav.themeHover}
+              >
+                <span className="app-rail-index">{config.theme === 'dark' ? '◐' : '◑'}</span>
+                <span className="app-rail-label">主题</span>
+              </button>
+            </div>
           </div>
         </aside>
 
         <div className="app-content-frame">
-          <ModulePicker isOpen={modulePickerOpen} onClose={() => setModulePickerOpen(false)} />
-
           <main className="app-main">
             {page === 'dashboard' && (
               <Dashboard />
             )}
             {page === 'reflection' && <Reflection />}
+            {page === 'monthlyOKR' && <MonthlyOKR />}
             {page === 'weeklyReview' && (
               <WeeklyReview
                 key={weeklyReviewWeekStart || 'current-week'}
@@ -256,6 +282,15 @@ function App() {
           </main>
         </div>
       </div>
+
+      <MobileAppShell
+        onOpenModulePicker={() => setModulePickerOpen(true)}
+        onToggleTheme={toggleTheme}
+        onToggleVisualStyle={toggleVisualStyle}
+        theme={config.theme ?? 'dark'}
+        visualStyleLabel={visualStyleLabel}
+        hasUpdate={hasUpdate}
+      />
 
       <style>{`
         body[data-alo-visual-style="orbit"] {

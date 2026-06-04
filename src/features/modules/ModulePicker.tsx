@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { getAllModules } from './moduleRegistry';
 import type { ModuleId } from '../../types';
@@ -12,6 +12,9 @@ const ModulePicker: React.FC<ModulePickerProps> = ({ isOpen, onClose }) => {
   const enabledModules = useAppStore((s) => s.enabledModules);
   const toggleModule = useAppStore((s) => s.toggleModule);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const feedbackTimerRef = useRef<number | undefined>(undefined);
+  const [changedModuleId, setChangedModuleId] = useState<ModuleId | undefined>();
+  const [changeNotice, setChangeNotice] = useState('');
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -23,10 +26,42 @@ const ModulePicker: React.FC<ModulePickerProps> = ({ isOpen, onClose }) => {
     return () => document.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
+  useEffect(() => () => {
+    if (feedbackTimerRef.current) {
+      window.clearTimeout(feedbackTimerRef.current);
+    }
+  }, []);
+
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === overlayRef.current) {
       onClose();
     }
+  };
+
+  const handleModuleToggle = (moduleId: ModuleId, moduleName: string, nextEnabled: boolean) => {
+    toggleModule(moduleId);
+    setChangedModuleId(moduleId);
+    setChangeNotice(`${nextEnabled ? '已显示' : '已隐藏'} ${moduleName}`);
+
+    if (feedbackTimerRef.current) {
+      window.clearTimeout(feedbackTimerRef.current);
+    }
+
+    feedbackTimerRef.current = window.setTimeout(() => {
+      setChangedModuleId(undefined);
+      setChangeNotice('');
+    }, 1400);
   };
 
   if (!isOpen) return null;
@@ -52,16 +87,19 @@ const ModulePicker: React.FC<ModulePickerProps> = ({ isOpen, onClose }) => {
               模块管理
             </div>
             <div className="font-caption module-picker-count">
-              已启用 {enabledCount} / {modules.length}
+              已显示 {enabledCount} / {modules.length}
+            </div>
+            <div className="font-caption module-picker-feedback" aria-live="polite" role="status">
+              {changeNotice}
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="module-picker-close"
-            aria-label="关闭模块管理"
+            aria-label="完成模块管理"
           >
-            ×
+            完成
           </button>
         </div>
 
@@ -70,12 +108,9 @@ const ModulePicker: React.FC<ModulePickerProps> = ({ isOpen, onClose }) => {
             const isEnabled = enabledModules.includes(mod.id as ModuleId);
             const zoneLabel = mod.defaultZone === 'main' ? '主区' : '侧栏';
             return (
-              <button
-                type="button"
+              <label
                 key={mod.id}
-                className={`module-picker-row${isEnabled ? ' is-enabled' : ''}`}
-                aria-pressed={isEnabled}
-                onClick={() => toggleModule(mod.id as ModuleId)}
+                className={`module-picker-row${isEnabled ? ' is-enabled' : ' is-disabled'}${changedModuleId === mod.id ? ' is-changing' : ''}`}
               >
                 <span className="module-picker-icon" aria-hidden="true">
                   {mod.icon}
@@ -88,13 +123,24 @@ const ModulePicker: React.FC<ModulePickerProps> = ({ isOpen, onClose }) => {
                   <span className="font-caption module-picker-description">
                     {mod.description}
                   </span>
+                  <span className="module-picker-zone">{zoneLabel}</span>
                 </span>
 
-                <span className="module-picker-meta">
-                  <span className="module-picker-zone">{zoneLabel}</span>
-                  <span className="module-picker-state">{isEnabled ? '启用' : '隐藏'}</span>
+                <span className="module-picker-control">
+                  <input
+                    type="checkbox"
+                    checked={isEnabled}
+                    onChange={() => handleModuleToggle(mod.id as ModuleId, mod.name, !isEnabled)}
+                    aria-label={`${isEnabled ? '隐藏' : '显示'}${mod.name}`}
+                  />
+                  <span className="module-picker-switch-track" aria-hidden="true">
+                    <span className="module-picker-switch-thumb" />
+                  </span>
+                  <span className="module-picker-state">
+                    {isEnabled ? '已显示' : '已隐藏'}
+                  </span>
                 </span>
-              </button>
+              </label>
             );
           })}
         </div>

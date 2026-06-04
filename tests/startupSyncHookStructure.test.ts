@@ -17,4 +17,8 @@ test('App wires startup COS sync through a dedicated hook', () => {
   assert.match(hook, /createDirectCosCredentialProvider/);
   assert.match(hook, /hasDirectCosCredentials/);
   assert.match(hook, /createStorageRecordFromAppState/);
+  assert.match(hook, /lastLocalUpdatedAt/);
+  assert.match(hook, /hasLocalChanges:\s*Boolean\(syncStatus\.lastLocalUpdatedAt\)/);
+  assert.match(hook, /localUpdatedAt:\s*syncStatus\.lastLocalUpdatedAt/);
+  assert.doesNotMatch(hook, /hasLocalChanges:\s*true/);
 });
