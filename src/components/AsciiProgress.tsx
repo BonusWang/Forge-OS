@@ -15,27 +15,23 @@ const AsciiProgress: React.FC<AsciiProgressProps> = ({
   showPercent = true,
   className = '',
 }) => {
-  if (total <= 0) {
-    return (
-      <span className={`ascii-progress font-mono-data ${className}`} style={{ color: 'var(--text-muted)' }}>
-        <span style={{ color: 'var(--text-muted)' }}>[{'░'.repeat(width)}]</span>
-        {' '}0%
-      </span>
-    );
-  }
-
-  const percent = Math.min(100, Math.max(0, (current / total) * 100));
-  const filled = Math.round((percent / 100) * width);
-  const empty = width - filled;
-
-  const bar = '█'.repeat(filled) + '░'.repeat(empty);
+  const percent = total <= 0 ? 0 : Math.min(100, Math.max(0, (current / total) * 100));
+  const label = showPercent ? `${Math.round(percent)}%` : `${current}/${total}`;
+  const progressStyle = {
+    '--ascii-progress-width': `${width}ch`,
+  } as React.CSSProperties;
 
   return (
-    <span className={`ascii-progress font-mono-data ${className}`}>
-      <span style={{ color: 'var(--accent-success)' }}>[{bar}]</span>
-      {' '}
+    <span className={`ascii-progress font-mono-data ${className}`} style={progressStyle}>
+      <span className="ascii-progress-frame" aria-hidden="true">
+        <span className="ascii-progress-bracket">[</span>
+        <span className="ascii-progress-track">
+          <span className="ascii-progress-fill" style={{ width: `${percent}%` }} />
+        </span>
+        <span className="ascii-progress-bracket">]</span>
+      </span>
       <span style={{ color: 'var(--text-secondary)' }}>
-        {showPercent ? `${Math.round(percent)}%` : `${current}/${total}`}
+        {label}
       </span>
     </span>
   );

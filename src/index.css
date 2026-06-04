@@ -205,6 +205,55 @@ body::before {
   line-height: 1.4;
 }
 
+.ascii-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.ascii-progress-frame {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--accent-success);
+}
+
+.ascii-progress-bracket {
+  color: var(--accent-success);
+}
+
+.ascii-progress-track {
+  display: inline-block;
+  height: 0.85em;
+  min-width: 4ch;
+  overflow: hidden;
+  background: rgba(130, 143, 138, 0.22);
+  border: 1px solid rgba(130, 143, 138, 0.3);
+  width: var(--ascii-progress-width, 20ch);
+}
+
+.ascii-progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent-success);
+}
+
+.today-progress-bar {
+  width: 100%;
+}
+
+.today-progress-bar .ascii-progress-frame {
+  flex: 0 1 80%;
+  min-width: 0;
+}
+
+.today-progress-bar .ascii-progress-track {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+}
+
 /* ============================================================
    4. Scrollbar
    ============================================================ */

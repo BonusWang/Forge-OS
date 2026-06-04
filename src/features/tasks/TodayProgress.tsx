@@ -36,7 +36,7 @@ const TodayProgress: React.FC = () => {
 
       {totalCount > 0 && (
         <div style={{ marginBottom: 'var(--space-2)' }}>
-          <AsciiProgress current={completedCount} total={totalCount} />
+          <AsciiProgress current={completedCount} total={totalCount} className="today-progress-bar" />
         </div>
       )}
 

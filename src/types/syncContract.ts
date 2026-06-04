@@ -20,7 +20,7 @@ export const SYNC_TYPE_CONTRACT = {
   } satisfies SyncStatus,
   envelope: {
     schemaVersion: 1,
-    appVersion: '1.0.3',
+    appVersion: '1.0.4',
     deviceId: 'device-1',
     revision: 'revision-1',
     updatedAt: '2026-06-03T00:00:00.000Z',

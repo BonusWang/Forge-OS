@@ -76,13 +76,16 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ year, month }) => {
     const popupWidth = 260;
     const gap = 4;
 
-    let top = rect.bottom + window.scrollY + gap;
+    let top = rect.bottom + gap;
     // If popup would overflow bottom of viewport, show it above the cell instead
     if (rect.bottom + popupHeight + gap > window.innerHeight) {
-      top = rect.top + window.scrollY - popupHeight - gap;
+      top = rect.top - popupHeight - gap;
+    }
+    if (top < gap) {
+      top = gap;
     }
 
-    let left = rect.left + window.scrollX;
+    let left = rect.left;
     // Keep popup within horizontal viewport bounds
     if (left + popupWidth > window.innerWidth) {
       left = window.innerWidth - popupWidth - gap;
