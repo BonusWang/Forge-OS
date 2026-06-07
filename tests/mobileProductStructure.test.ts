@@ -55,6 +55,7 @@ test('mobile shell mirrors tab changes into browser history for Android back nav
 test('mobile today forge presents desktop data as a life-system entry, not a todo board', () => {
   const todayForge = read('src/features/mobile/MobileTodayForge.tsx');
 
+  assert.match(todayForge, /mobile-today-focus-card/);
   assert.match(todayForge, /mobile-daily-command/);
   assert.match(todayForge, /mobile-status-pills/);
   assert.match(todayForge, /mobile-mainline-focus/);
@@ -63,7 +64,7 @@ test('mobile today forge presents desktop data as a life-system entry, not a tod
   assert.match(todayForge, /mobile-commitment-row/);
   assert.doesNotMatch(todayForge, /mobile-quick-dock/);
   assert.match(todayForge, /今日锻造台/);
-  assert.match(todayForge, /今日主线/);
+  assert.match(todayForge, /今日焦点/);
   assert.match(todayForge, /今日承诺/);
   assert.match(todayForge, /今日原则/);
   assert.doesNotMatch(todayForge, /快速记录/);
@@ -94,7 +95,8 @@ test('mobile today forge lets users add a task from a bottom sheet', () => {
   assert.match(todayForge, /const addTask = useAppStore\(\(s\) => s\.addTask\)/);
   assert.match(todayForge, /isTaskComposerOpen/);
   assert.match(todayForge, /taskInput/);
-  assert.match(todayForge, /mobile-task-fab/);
+  assert.match(todayForge, /mobile-commitment-title-row/);
+  assert.match(todayForge, /mobile-commitment-add/);
   assert.match(todayForge, /aria-label="添加今日任务"/);
   assert.match(todayForge, /mobile-task-sheet/);
   assert.match(todayForge, /mobile-task-input/);
@@ -106,6 +108,7 @@ test('mobile today forge lets users add a task from a bottom sheet', () => {
   assert.match(todayForge, /--mobile-keyboard-inset/);
   assert.match(todayForge, /visualViewport\.addEventListener\('resize'/);
   assert.match(todayForge, /visualViewport\.removeEventListener\('resize'/);
+  assert.doesNotMatch(todayForge, /mobile-task-fab/);
 });
 
 test('mobile progress uses a vertical system console instead of a horizontal task board', () => {
@@ -239,11 +242,14 @@ test('mobile capture separates quick inspiration from daily reflection deposits'
   const captureHub = read('src/features/mobile/MobileCaptureHub.tsx');
 
   assert.match(captureHub, /mobile-journal-timeline/);
+  assert.match(captureHub, /mobile-capture-segmented/);
+  assert.match(captureHub, /role="tablist"/);
+  assert.match(captureHub, /aria-selected=\{mode === 'inspiration'\}/);
+  assert.match(captureHub, /aria-selected=\{mode === 'reflection'\}/);
+  assert.match(captureHub, /selectCaptureMode/);
   assert.match(captureHub, /mobile-capture-composer/);
   assert.match(captureHub, /mobile-capture-rail/);
   assert.match(captureHub, /mobile-capture-save/);
-  assert.match(captureHub, /mobile-capture-deposit/);
-  assert.match(captureHub, /mobile-capture-deposit-actions/);
   assert.match(captureHub, /mobile-structured-composer/);
   assert.match(captureHub, /isComposerOpen/);
   assert.match(captureHub, /setIsComposerOpen\(false\)/);
@@ -267,7 +273,6 @@ test('mobile capture separates quick inspiration from daily reflection deposits'
   assert.doesNotMatch(captureHub, /const structuredModes/);
   assert.match(captureHub, /快速捕捉/);
   assert.match(captureHub, /灵感先收进来/);
-  assert.match(captureHub, /今日沉淀/);
   assert.match(captureHub, /反思和成效再整理/);
   assert.match(captureHub, /写一条反思/);
   assert.doesNotMatch(captureHub, /aria-pressed=\{mode === item && isStructuredComposerOpen\}/);
@@ -275,10 +280,11 @@ test('mobile capture separates quick inspiration from daily reflection deposits'
   assert.doesNotMatch(captureHub, /保存到记录流/);
   assert.match(captureHub, /保存到灵感库/);
   assert.doesNotMatch(captureHub, /mobile-capture-lanes/);
-  assert.doesNotMatch(captureHub, /role="tablist"/);
-  assert.doesNotMatch(captureHub, /aria-selected/);
+  assert.doesNotMatch(captureHub, /mobile-capture-deposit/);
+  assert.doesNotMatch(captureHub, /mobile-capture-deposit-actions/);
   assert.doesNotMatch(captureHub, />证据</);
   assert.doesNotMatch(captureHub, />成效</);
+  assert.doesNotMatch(captureHub, /低摩擦保存，不要求现在就整理成反思/);
 });
 
 test('mobile capture keeps desktop source and tag fields for record stream items', () => {
@@ -325,6 +331,32 @@ test('mobile capture keeps desktop source and tag fields for record stream items
   assert.match(captureHub, /mobile-capture-history-tags/);
 });
 
+test('mobile capture uses matching vertical process chains with separate semantics', () => {
+  const captureHub = read('src/features/mobile/MobileCaptureHub.tsx');
+  const css = read('src/index.css');
+
+  assert.match(captureHub, /type ReflectionCaptureStep = 'obstacle' \| 'solution' \| 'effect' \| 'review'/);
+  assert.match(captureHub, /reflectionCaptureStep/);
+  assert.match(captureHub, /reflectionCaptureSteps/);
+  assert.match(captureHub, /renderCaptureStepChain/);
+  assert.match(captureHub, /aria-label=\{`\$\{modeLabels\[mode\]\}记录流程链`\}/);
+  assert.match(captureHub, /mobile-capture-node-rail/);
+  assert.match(captureHub, /想法/);
+  assert.match(captureHub, /来源/);
+  assert.match(captureHub, /标签/);
+  assert.match(captureHub, /确认/);
+  assert.match(captureHub, /障碍/);
+  assert.match(captureHub, /方法/);
+  assert.match(captureHub, /有效\/无效/);
+  assert.match(captureHub, /最近灵感/);
+  assert.match(captureHub, /最近反思/);
+  assert.match(captureHub, /保存到灵感库/);
+  assert.match(captureHub, /保存到反思库/);
+  assert.match(css, /\.mobile-capture-node-list[\s\S]*position:\s*relative/);
+  assert.match(css, /\.mobile-capture-node-rail/);
+  assert.match(css, /\.mobile-capture-node-index[\s\S]*border-radius:\s*50%/);
+});
+
 test('mobile capture composers can collapse without switching modules', () => {
   const captureHub = read('src/features/mobile/MobileCaptureHub.tsx');
 
@@ -332,10 +364,13 @@ test('mobile capture composers can collapse without switching modules', () => {
   assert.match(captureHub, /requestCloseComposer/);
   assert.match(captureHub, /hasUnsavedInspirationDraft/);
   assert.match(captureHub, /hasUnsavedReflectionDraft/);
+  assert.match(captureHub, /reflectionDraftBaseline/);
+  assert.match(captureHub, /hasReflectionAnswerChanges/);
+  assert.match(captureHub, /createReflectionAnswers\(reflectionTemplate, todayReflection\)/);
+  assert.match(captureHub, /hasUnsavedReflectionDraft =\s*isStructuredComposerOpen && hasReflectionAnswerChanges/);
   assert.match(captureHub, /confirm\(/);
   assert.match(captureHub, /setIsComposerOpen\(false\)/);
-  assert.match(captureHub, /isQuickComposerOpen \? '收起灵感' : '写一条灵感'/);
-  assert.match(captureHub, /isStructuredComposerOpen \? '收起反思' : '写一条反思'/);
+  assert.match(captureHub, /isComposerOpen \? `收起\$\{modeLabels\[mode\]\}` : `写一条\$\{modeLabels\[mode\]\}`/);
 });
 
 test('mobile reflection capture follows the desktop daily reflection template without polluting inspiration vault', () => {
@@ -398,6 +433,21 @@ test('dossier visual style reaches the mobile shell without changing mobile navi
   assert.match(app, /visualStyleLabel={effectiveMobileVisualStyleLabel}/);
 });
 
+test('claude visual style reaches the mobile shell without changing mobile navigation', () => {
+  const app = read('src/App.tsx');
+  const mobileShellBlock = app.match(/\.claude-style-shell \.mobile-app-shell\s*\{[\s\S]*?\n\s*\}/)?.[0] ?? '';
+
+  assert.match(app, /\.claude-style-shell \.mobile-app-shell/);
+  assert.doesNotMatch(mobileShellBlock, /grid-template-columns|position:\s*fixed|display:\s*grid/);
+  assert.match(app, /\.claude-style-shell \.mobile-bottom-nav/);
+  assert.match(app, /\.claude-style-shell \.mobile-nav-button/);
+  assert.match(app, /\.claude-style-shell \.mobile-system-row/);
+  assert.match(app, /\.claude-style-shell \.mobile-daily-command/);
+  assert.match(app, /\.claude-style-shell \.mobile-capture-composer/);
+  assert.match(app, /\.claude-style-shell \.mobile-week-console/);
+  assert.doesNotMatch(app, /\.orbit-style-shell \.mobile-app-shell/);
+});
+
 test('mobile visual style can be local-only without changing desktop style', () => {
   const app = read('src/App.tsx');
   const shell = read('src/features/mobile/MobileAppShell.tsx');
@@ -407,6 +457,8 @@ test('mobile visual style can be local-only without changing desktop style', () 
   assert.match(app, /import \{ platformStorage \} from '\.\/utils\/platformStorage'/);
   assert.match(app, /readMobilePreferenceState/);
   assert.match(app, /writeMobilePreferenceState/);
+  assert.match(app, /normalizeVisualStyle/);
+  assert.match(app, /value === 'orbit' \? 'claude'/);
   assert.match(app, /platformStorage\.getItem\(key\)/);
   assert.match(app, /platformStorage\.setItem\(key, \{ state: value \}\)/);
   assert.doesNotMatch(app, /window\.localStorage/);
@@ -457,7 +509,8 @@ test('mobile CSS treats Android safe areas and hides desktop board chrome on pho
   assert.match(mobileContent, /scrollbar-width:\s*none/);
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-content::-webkit-scrollbar[\s\S]*display:\s*none/);
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-daily-command[\s\S]*border:\s*0/);
-  assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-commitment-row[\s\S]*min-height:\s*56px/);
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-commitment-row[\s\S]*min-height:\s*48px/);
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-commitment-add[\s\S]*min-height:\s*44px/);
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-day-timeline[\s\S]*border-left/);
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-capture-composer[\s\S]*min-height:\s*0/);
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-capture-composer\.is-open[\s\S]*min-height:\s*260px/);
@@ -470,9 +523,8 @@ test('mobile CSS treats Android safe areas and hides desktop board chrome on pho
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-capture-review[\s\S]*display:\s*grid/);
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-capture-optional-fields[\s\S]*display:\s*grid/);
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-capture-field input[\s\S]*min-height:\s*44px/);
-  assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-capture-deposit[\s\S]*display:\s*grid/);
-  assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-capture-deposit-actions[\s\S]*display:\s*grid/);
-  assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-capture-deposit-actions button[\s\S]*min-height:\s*58px/);
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-capture-segmented[\s\S]*display:\s*grid/);
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-capture-segmented button[\s\S]*min-height:\s*44px/);
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-structured-composer[\s\S]*display:\s*grid/);
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-week-review-panel[\s\S]*display:\s*grid/);
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-week-switcher[\s\S]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
@@ -490,9 +542,7 @@ test('mobile CSS treats Android safe areas and hides desktop board chrome on pho
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-mood-summary[\s\S]*min-height:\s*42px/);
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-mood-controls[\s\S]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-stepper-control button[\s\S]*min-height:\s*44px/);
-  assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-task-fab[\s\S]*position:\s*fixed/);
-  assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-task-fab[\s\S]*bottom:\s*calc\(env\(safe-area-inset-bottom\) \+ 104px\)/);
-  assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-task-fab[\s\S]*min-height:\s*64px/);
+  assert.doesNotMatch(css, /\.mobile-task-fab/);
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-task-sheet[\s\S]*position:\s*fixed/);
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*--mobile-keyboard-inset:\s*0px/);
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*\.mobile-task-sheet[\s\S]*bottom:\s*calc\(env\(safe-area-inset-bottom\) \+ var\(--mobile-keyboard-inset\) \+ 82px\)/);

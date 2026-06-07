@@ -17,7 +17,7 @@ import { aloCopy } from './copy/alo-copy';
 import { resources } from './utils/assets';
 import { platformStorage } from './utils/platformStorage';
 
-type VisualStyle = 'classic' | 'orbit' | 'supabase' | 'dossier';
+type VisualStyle = 'classic' | 'claude' | 'supabase' | 'dossier';
 
 const MOBILE_VISUAL_STYLE_LOCAL_KEY = 'forge-os.mobileVisualStyleLocal';
 const MOBILE_VISUAL_STYLE_KEY = 'forge-os.mobileVisualStyle';
@@ -56,21 +56,21 @@ const classicLightStyleTokens = {
   '--font-mono': '"JetBrains Mono", "Courier New", Consolas, monospace',
 } as CSSProperties;
 
-const orbitStyleTokens = {
-  '--bg-primary': '#faf7f2',
+const claudeStyleTokens = {
+  '--bg-primary': '#faf9f5',
   '--bg-secondary': '#ffffff',
-  '--bg-tertiary': '#f3eee7',
-  '--text-primary': '#1a1816',
-  '--text-secondary': '#6b6660',
-  '--text-muted': '#8d867d',
-  '--accent-gold': '#d86a47',
-  '--accent-success': '#2e7d5b',
-  '--accent-danger': '#c0473a',
-  '--border-primary': '#eae5dd',
-  '--border-hover': '#d86a47',
-  '--font-display': '"Cormorant", Georgia, "Times New Roman", serif',
-  '--font-sans': 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-  '--font-mono': 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  '--bg-tertiary': '#f5f0e8',
+  '--text-primary': '#141413',
+  '--text-secondary': '#3d3d3a',
+  '--text-muted': '#6c6a64',
+  '--accent-gold': '#cc785c',
+  '--accent-success': '#5db872',
+  '--accent-danger': '#c64545',
+  '--border-primary': '#e6dfd8',
+  '--border-hover': '#cc785c',
+  '--font-display': '"Cormorant Garamond", "EB Garamond", Georgia, "Times New Roman", serif',
+  '--font-sans': 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif',
+  '--font-mono': '"JetBrains Mono", "SFMono-Regular", Consolas, monospace',
 } as CSSProperties;
 
 const supabaseStyleTokens = {
@@ -107,8 +107,18 @@ const dossierStyleTokens = {
   '--font-mono': '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
 } as CSSProperties;
 
-const isVisualStyle = (value: string | null): value is VisualStyle =>
-  value === 'classic' || value === 'orbit' || value === 'supabase' || value === 'dossier';
+const normalizeVisualStyle = (value: string | null): VisualStyle | undefined => {
+  const normalized = value === 'orbit' ? 'claude' : value;
+  if (
+    normalized === 'classic' ||
+    normalized === 'claude' ||
+    normalized === 'supabase' ||
+    normalized === 'dossier'
+  ) {
+    return normalized;
+  }
+  return undefined;
+};
 
 const readMobilePreferenceState = (key: string): unknown => {
   try {
@@ -130,7 +140,7 @@ const writeMobilePreferenceState = (key: string, value: string | boolean) => {
 
 const readStoredMobileVisualStyle = (): VisualStyle => {
   const value = readMobilePreferenceState(MOBILE_VISUAL_STYLE_KEY);
-  return typeof value === 'string' && isVisualStyle(value) ? value : 'classic';
+  return typeof value === 'string' ? (normalizeVisualStyle(value) ?? 'classic') : 'classic';
 };
 
 const readStoredMobileVisualStyleLocal = () => {
@@ -138,15 +148,15 @@ const readStoredMobileVisualStyleLocal = () => {
 };
 
 const getNextVisualStyle = (style: VisualStyle): VisualStyle => {
-  if (style === 'classic') return 'orbit';
-  if (style === 'orbit') return 'supabase';
+  if (style === 'classic') return 'claude';
+  if (style === 'claude') return 'supabase';
   if (style === 'supabase') return 'dossier';
   return 'classic';
 };
 
 const getStyleShellClassName = (style: VisualStyle) =>
-  style === 'orbit'
-    ? 'orbit-style-shell'
+  style === 'claude'
+    ? 'claude-style-shell'
     : style === 'supabase'
       ? 'supabase-style-shell'
       : style === 'dossier'
@@ -154,10 +164,10 @@ const getStyleShellClassName = (style: VisualStyle) =>
         : '';
 
 const getVisualStyleLabel = (style: VisualStyle) =>
-  style === 'orbit' ? 'Orbit' : style === 'supabase' ? 'Supabase' : style === 'dossier' ? 'Dossier' : '复古';
+  style === 'claude' ? 'Claude' : style === 'supabase' ? 'Supabase' : style === 'dossier' ? 'Dossier' : '复古';
 
 const getVisualStyleTokens = (style: VisualStyle, theme: 'dark' | 'light') => {
-  if (style === 'orbit') return orbitStyleTokens;
+  if (style === 'claude') return claudeStyleTokens;
   if (style === 'supabase') return supabaseStyleTokens;
   if (style === 'dossier') return dossierStyleTokens;
   return theme === 'light' ? classicLightStyleTokens : classicDarkStyleTokens;
@@ -228,11 +238,15 @@ function App() {
     // ipcRenderer.on returns nothing useful here; cleanup is optional
   }, []);
 
-  const isOrbitStyle = visualStyle === 'orbit';
+  const isClaudeStyle = visualStyle === 'claude';
   const isSupabaseStyle = visualStyle === 'supabase';
   const isDossierStyle = visualStyle === 'dossier';
   const activeStyleTokens =
-    visualStyle === 'dossier' ? dossierStyleTokens : getVisualStyleTokens(visualStyle, config.theme ?? 'dark');
+    visualStyle === 'claude'
+      ? claudeStyleTokens
+      : visualStyle === 'dossier'
+        ? dossierStyleTokens
+        : getVisualStyleTokens(visualStyle, config.theme ?? 'dark');
   const visualStyleLabel = visualStyle === 'dossier' ? 'Dossier' : getVisualStyleLabel(visualStyle);
   const effectiveMobileVisualStyle = isMobileVisualStyleLocal ? mobileVisualStyle : visualStyle;
   const effectiveMobileVisualStyleLabel = getVisualStyleLabel(effectiveMobileVisualStyle);
@@ -273,7 +287,7 @@ function App() {
 
   return (
     <div
-      className={`app-shell${isOrbitStyle ? ' orbit-style-shell' : ''}${isSupabaseStyle ? ' supabase-style-shell' : ''}${isDossierStyle ? ' dossier-style-shell' : ''}`}
+      className={`app-shell${isClaudeStyle ? ' claude-style-shell' : ''}${isSupabaseStyle ? ' supabase-style-shell' : ''}${isDossierStyle ? ' dossier-style-shell' : ''}`}
       data-visual-style={visualStyle}
       style={{
         minHeight: '100vh',
@@ -365,10 +379,10 @@ function App() {
                 className="app-rail-button"
                 aria-label={`切换视觉风格，当前：${visualStyleLabel}`}
                 aria-pressed={visualStyle !== 'classic'}
-                title={`当前风格：${visualStyleLabel}。点击切换复古、Orbit、Supabase、Dossier 风格`}
+                title={`当前风格：${visualStyleLabel}。点击切换复古、Claude、Supabase、Dossier 风格`}
               >
                 <span className="app-rail-index">
-                  {visualStyle === 'dossier' ? '档' : visualStyle === 'supabase' ? 'S' : visualStyle === 'orbit' ? 'O' : '◇'}
+                  {visualStyle === 'dossier' ? '档' : visualStyle === 'supabase' ? 'S' : visualStyle === 'claude' ? 'C' : '◇'}
                 </span>
                 <span className="app-rail-label">风格</span>
               </button>
@@ -428,8 +442,8 @@ function App() {
       </div>
 
       <style>{`
-        body[data-alo-visual-style="orbit"] {
-          background-color: #faf7f2;
+        body[data-alo-visual-style="claude"] {
+          background-color: #faf9f5;
         }
 
         body[data-alo-visual-style="supabase"] {
@@ -443,7 +457,7 @@ function App() {
             #f7f2e8;
         }
 
-        body[data-alo-visual-style="orbit"]::before {
+        body[data-alo-visual-style="claude"]::before {
           opacity: 0;
         }
 
@@ -455,21 +469,21 @@ function App() {
           opacity: 0;
         }
 
-        .orbit-style-shell {
-          --bg-primary: #faf7f2;
+        .claude-style-shell {
+          --bg-primary: #faf9f5;
           --bg-secondary: #ffffff;
-          --bg-tertiary: #f3eee7;
-          --text-primary: #1a1816;
-          --text-secondary: #6b6660;
-          --text-muted: #8d867d;
-          --accent-gold: #d86a47;
-          --accent-success: #2e7d5b;
-          --accent-danger: #c0473a;
-          --border-primary: #eae5dd;
-          --border-hover: #d86a47;
-          --font-display: "Cormorant", Georgia, "Times New Roman", serif;
-          --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          --font-mono: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          --bg-tertiary: #f5f0e8;
+          --text-primary: #141413;
+          --text-secondary: #3d3d3a;
+          --text-muted: #6c6a64;
+          --accent-gold: #cc785c;
+          --accent-success: #5db872;
+          --accent-danger: #c64545;
+          --border-primary: #e6dfd8;
+          --border-hover: #cc785c;
+          --font-display: "Cormorant Garamond", "EB Garamond", Georgia, "Times New Roman", serif;
+          --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+          --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
           background-color: var(--bg-primary) !important;
           color: var(--text-primary) !important;
           font-variant-numeric: tabular-nums;
@@ -518,7 +532,7 @@ function App() {
           font-variant-numeric: tabular-nums;
         }
 
-        .orbit-style-shell .app-main {
+        .claude-style-shell .app-main {
           background: transparent !important;
           padding: var(--space-4) var(--space-5) var(--space-7) !important;
         }
@@ -565,7 +579,7 @@ function App() {
           white-space: nowrap;
         }
 
-        .orbit-style-shell .app-rail {
+        .claude-style-shell .app-rail {
           padding: 24px 16px !important;
           background-color: rgba(255, 255, 255, 0.82) !important;
           backdrop-filter: saturate(120%) blur(10px);
@@ -587,7 +601,7 @@ function App() {
           box-shadow: 10px 0 28px rgba(30, 24, 15, 0.08);
         }
 
-        .orbit-style-shell .app-rail-brand {
+        .claude-style-shell .app-rail-brand {
           color: var(--text-primary) !important;
           font-family: var(--font-display);
           font-size: 28px;
@@ -615,7 +629,7 @@ function App() {
           text-transform: none;
         }
 
-        .orbit-style-shell .app-brand-name {
+        .claude-style-shell .app-brand-name {
           font-family: var(--font-display);
           font-size: 28px;
         }
@@ -633,7 +647,7 @@ function App() {
           letter-spacing: 0;
         }
 
-        .orbit-style-shell .app-brand-slogan {
+        .claude-style-shell .app-brand-slogan {
           font-family: var(--font-sans);
           font-size: 12px;
         }
@@ -653,7 +667,7 @@ function App() {
           text-transform: uppercase;
         }
 
-        .orbit-style-shell .app-rail-button {
+        .claude-style-shell .app-rail-button {
           min-height: 34px;
           border: 1px solid transparent !important;
           border-radius: 8px;
@@ -698,7 +712,7 @@ function App() {
           text-transform: none;
         }
 
-        .orbit-style-shell .app-rail-button:hover {
+        .claude-style-shell .app-rail-button:hover {
           border-color: var(--border-primary) !important;
           background: rgba(255, 255, 255, 0.62) !important;
           color: var(--text-primary) !important;
@@ -716,10 +730,10 @@ function App() {
           color: var(--text-primary) !important;
         }
 
-        .orbit-style-shell .app-rail-button[aria-current="page"],
-        .orbit-style-shell .app-rail-button[aria-pressed="true"] {
-          border-color: rgba(216, 106, 71, 0.28) !important;
-          background: rgba(216, 106, 71, 0.08) !important;
+        .claude-style-shell .app-rail-button[aria-current="page"],
+        .claude-style-shell .app-rail-button[aria-pressed="true"] {
+          border-color: rgba(204, 120, 92, 0.28) !important;
+          background: rgba(204, 120, 92, 0.08) !important;
           color: var(--accent-gold) !important;
         }
 
@@ -739,18 +753,18 @@ function App() {
           box-shadow: 0 6px 14px rgba(30, 24, 15, 0.12);
         }
 
-        .orbit-style-shell .font-display {
+        .claude-style-shell .font-display {
           font-family: var(--font-display);
           font-weight: 700;
           letter-spacing: 0;
           text-transform: none;
         }
 
-        .orbit-style-shell .font-h1,
-        .orbit-style-shell .font-h2,
-        .orbit-style-shell .font-h3,
-        .orbit-style-shell .font-body,
-        .orbit-style-shell .font-caption {
+        .claude-style-shell .font-h1,
+        .claude-style-shell .font-h2,
+        .claude-style-shell .font-h3,
+        .claude-style-shell .font-body,
+        .claude-style-shell .font-caption {
           letter-spacing: 0;
           text-transform: none;
         }
@@ -790,7 +804,7 @@ function App() {
           font-weight: 900;
         }
 
-        .orbit-style-shell .font-body {
+        .claude-style-shell .font-body {
           font-size: 14px;
         }
 
@@ -804,7 +818,7 @@ function App() {
           font-size: 14px;
         }
 
-        .orbit-style-shell .font-caption {
+        .claude-style-shell .font-caption {
           font-size: 12px;
         }
 
@@ -820,7 +834,7 @@ function App() {
           font-weight: 800;
         }
 
-        .orbit-style-shell .ascii-box {
+        .claude-style-shell .ascii-box {
           overflow: hidden;
           border-radius: 8px;
           border-color: var(--border-primary);
@@ -844,8 +858,8 @@ function App() {
           box-shadow: 0 8px 24px rgba(30, 24, 15, 0.08);
         }
 
-        .orbit-style-shell .ascii-box:hover {
-          border-color: rgba(216, 106, 71, 0.5);
+        .claude-style-shell .ascii-box:hover {
+          border-color: rgba(204, 120, 92, 0.5);
         }
 
         .supabase-style-shell .ascii-box:hover {
@@ -856,9 +870,9 @@ function App() {
           border-color: var(--accent-gold);
         }
 
-        .orbit-style-shell .ascii-box-title {
+        .claude-style-shell .ascii-box-title {
           border-bottom-color: var(--border-primary);
-          background: rgba(250, 247, 242, 0.72);
+          background: rgba(250, 249, 245, 0.72);
           color: var(--accent-gold);
           font-family: var(--font-display);
           font-size: 18px;
@@ -892,7 +906,7 @@ function App() {
           white-space: normal;
         }
 
-        .orbit-style-shell .task-column {
+        .claude-style-shell .task-column {
           border: 1px solid var(--border-primary) !important;
           border-radius: 8px;
           background-color: var(--bg-secondary) !important;
@@ -914,8 +928,8 @@ function App() {
           box-shadow: 0 8px 24px rgba(30, 24, 15, 0.08);
         }
 
-        .orbit-style-shell .task-column-header {
-          background: rgba(250, 247, 242, 0.78) !important;
+        .claude-style-shell .task-column-header {
+          background: rgba(250, 249, 245, 0.78) !important;
         }
 
         .supabase-style-shell .task-column-header {
@@ -929,8 +943,8 @@ function App() {
           color: var(--accent-gold);
         }
 
-        .orbit-style-shell .task-column-footer {
-          background: rgba(250, 247, 242, 0.46);
+        .claude-style-shell .task-column-footer {
+          background: rgba(250, 249, 245, 0.46);
         }
 
         .supabase-style-shell .task-column-footer {
@@ -942,9 +956,9 @@ function App() {
           border-top: 1px dashed var(--border-primary);
         }
 
-        .orbit-style-shell .task-card {
+        .claude-style-shell .task-card {
           border-radius: 8px;
-          background-color: #faf7f2 !important;
+          background-color: #faf9f5 !important;
           border-color: var(--border-primary) !important;
         }
 
@@ -960,9 +974,9 @@ function App() {
           border-color: var(--border-primary) !important;
         }
 
-        .orbit-style-shell .task-card:hover {
+        .claude-style-shell .task-card:hover {
           background-color: var(--bg-secondary) !important;
-          border-color: rgba(216, 106, 71, 0.5) !important;
+          border-color: rgba(204, 120, 92, 0.5) !important;
         }
 
         .supabase-style-shell .task-card:hover {
@@ -975,7 +989,7 @@ function App() {
           border-color: var(--accent-gold) !important;
         }
 
-        .orbit-style-shell .alo-empty-state-image {
+        .claude-style-shell .alo-empty-state-image {
           display: none !important;
         }
 
@@ -987,12 +1001,12 @@ function App() {
           display: none !important;
         }
 
-        .orbit-style-shell button:focus-visible,
-        .orbit-style-shell a:focus-visible,
-        .orbit-style-shell input:focus-visible,
-        .orbit-style-shell textarea:focus-visible,
-        .orbit-style-shell select:focus-visible {
-          outline: 2px solid rgba(216, 106, 71, 0.58);
+        .claude-style-shell button:focus-visible,
+        .claude-style-shell a:focus-visible,
+        .claude-style-shell input:focus-visible,
+        .claude-style-shell textarea:focus-visible,
+        .claude-style-shell select:focus-visible {
+          outline: 2px solid rgba(204, 120, 92, 0.58);
           outline-offset: 3px;
         }
 
@@ -1014,10 +1028,10 @@ function App() {
           outline-offset: 3px;
         }
 
-        .orbit-style-shell .btn-invert:hover,
-        .orbit-style-shell .btn-invert:focus-visible {
+        .claude-style-shell .btn-invert:hover,
+        .claude-style-shell .btn-invert:focus-visible {
           border-color: var(--accent-gold) !important;
-          background-color: rgba(216, 106, 71, 0.08) !important;
+          background-color: rgba(204, 120, 92, 0.08) !important;
           color: var(--accent-gold) !important;
         }
 
@@ -1033,6 +1047,58 @@ function App() {
           border-color: var(--accent-gold) !important;
           background-color: rgba(159, 32, 25, 0.08) !important;
           color: var(--accent-gold) !important;
+        }
+
+        .claude-style-shell .mobile-app-shell {
+          --mobile-radius: 12px;
+          --mobile-surface: rgba(255, 255, 255, 0.86);
+          --mobile-surface-strong: #ffffff;
+          --mobile-surface-soft: rgba(245, 240, 232, 0.82);
+          --mobile-line: var(--border-primary);
+          --mobile-muted-line: rgba(230, 223, 216, 0.9);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.42), transparent 180px),
+            var(--bg-primary);
+          color: var(--text-primary);
+          font-family: var(--font-sans);
+        }
+
+        .claude-style-shell .mobile-daily-command,
+        .claude-style-shell .mobile-capture-composer,
+        .claude-style-shell .mobile-week-console,
+        .claude-style-shell .mobile-system-status,
+        .claude-style-shell .mobile-system-tools .ascii-box {
+          border: 1px solid var(--mobile-line);
+          border-radius: var(--mobile-radius);
+          background: var(--mobile-surface);
+          box-shadow: 0 10px 28px rgba(20, 20, 19, 0.06);
+        }
+
+        .claude-style-shell .mobile-bottom-nav {
+          backdrop-filter: saturate(120%) blur(16px);
+          background: rgba(250, 249, 245, 0.92);
+          border-top: 1px solid var(--mobile-line);
+        }
+
+        .claude-style-shell .mobile-nav-button {
+          border-radius: 10px;
+          color: var(--text-secondary);
+          font-weight: 600;
+        }
+
+        .claude-style-shell .mobile-nav-button[aria-current="page"] {
+          background: rgba(204, 120, 92, 0.12);
+          color: var(--accent-gold);
+        }
+
+        .claude-style-shell .mobile-nav-button[aria-current="page"] span {
+          color: var(--accent-gold);
+        }
+
+        .claude-style-shell .mobile-system-row {
+          border: 1px solid var(--mobile-muted-line);
+          border-radius: 10px;
+          background: var(--mobile-surface-soft);
         }
 
         .dossier-style-shell .mobile-app-shell {
@@ -1092,7 +1158,7 @@ function App() {
         }
 
         @media (max-width: 767px) {
-          .orbit-style-shell .app-main {
+          .claude-style-shell .app-main {
             padding: 20px 14px 40px !important;
           }
 
@@ -1104,7 +1170,7 @@ function App() {
             padding: 20px 14px 40px !important;
           }
 
-          .orbit-style-shell .app-rail {
+          .claude-style-shell .app-rail {
             height: auto !important;
             min-height: 60px;
             padding: 6px 10px !important;
@@ -1134,7 +1200,7 @@ function App() {
             gap: 4px;
           }
 
-          .orbit-style-shell .app-rail-brand {
+          .claude-style-shell .app-rail-brand {
             width: 100%;
             font-size: 22px;
           }
@@ -1153,7 +1219,7 @@ function App() {
             display: none;
           }
 
-          .orbit-style-shell .app-rail-section {
+          .claude-style-shell .app-rail-section {
             width: 100%;
             padding-bottom: 2px;
           }
@@ -1168,7 +1234,7 @@ function App() {
             padding-bottom: 2px;
           }
 
-          .orbit-style-shell .app-rail-button,
+          .claude-style-shell .app-rail-button,
           .supabase-style-shell .app-rail-button,
           .dossier-style-shell .app-rail-button {
             grid-template-columns: 1fr;
@@ -1177,15 +1243,15 @@ function App() {
             text-align: center;
           }
 
-          .orbit-style-shell .app-rail-section--tools .app-rail-button,
+          .claude-style-shell .app-rail-section--tools .app-rail-button,
           .supabase-style-shell .app-rail-section--tools .app-rail-button,
           .dossier-style-shell .app-rail-section--tools .app-rail-button {
             min-height: 34px;
           }
 
-          .orbit-style-shell .reflection-grid,
-          .orbit-style-shell .weekly-review-layout,
-          .orbit-style-shell .system-layout {
+          .claude-style-shell .reflection-grid,
+          .claude-style-shell .weekly-review-layout,
+          .claude-style-shell .system-layout {
             grid-template-columns: 1fr !important;
             flex-direction: column !important;
           }

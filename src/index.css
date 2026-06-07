@@ -2,7 +2,7 @@
  * Visual Direction: The Monastic Terminal (Scriptorium Parchment)
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=EB+Garamond:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
 
 /* ============================================================
    1. Design Tokens
@@ -1699,6 +1699,10 @@ pre, code {
     padding: 14px;
   }
 
+  .mobile-today-focus-card {
+    padding: 14px;
+  }
+
   .mobile-command-topline,
   .mobile-section-heading,
   .mobile-day-header {
@@ -1937,7 +1941,6 @@ pre, code {
   .mobile-commitment-panel,
   .mobile-week-console,
   .mobile-capture-composer,
-  .mobile-capture-deposit,
   .mobile-system-panel {
     background: var(--mobile-surface);
     border: 1px solid var(--mobile-muted-line);
@@ -1986,6 +1989,34 @@ pre, code {
     margin-top: 12px;
   }
 
+  .mobile-commitment-title-row {
+    align-items: flex-start;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) 44px;
+  }
+
+  .mobile-commitment-title-row .mobile-section-heading {
+    min-width: 0;
+  }
+
+  .mobile-commitment-add {
+    align-items: center;
+    background: color-mix(in srgb, var(--accent-gold) 10%, transparent);
+    border: 1px solid var(--accent-gold);
+    border-radius: 999px;
+    color: var(--accent-gold);
+    display: inline-flex;
+    font-family: var(--mobile-font);
+    font-size: 24px;
+    font-weight: 300;
+    justify-content: center;
+    line-height: 1;
+    min-height: 44px;
+    padding: 0 0 2px;
+    width: 44px;
+  }
+
   .mobile-commitment-row {
     align-items: center;
     background: var(--mobile-surface-soft);
@@ -1994,8 +2025,8 @@ pre, code {
     display: grid;
     gap: 8px 10px;
     grid-template-columns: 44px minmax(0, 1fr);
-    min-height: 56px;
-    padding: 10px;
+    min-height: 48px;
+    padding: 8px;
   }
 
   .mobile-check-button {
@@ -2062,32 +2093,6 @@ pre, code {
     border-color: var(--mobile-muted-line);
     color: var(--text-muted);
     opacity: 0.58;
-  }
-
-  .mobile-task-fab {
-    align-items: center;
-    background: color-mix(in srgb, var(--bg-primary) 72%, var(--accent-gold));
-    border: 2px solid var(--accent-gold);
-    border-radius: 50%;
-    bottom: calc(env(safe-area-inset-bottom) + 104px);
-    box-shadow: 0 16px 34px color-mix(in srgb, var(--bg-primary) 58%, transparent);
-    color: var(--accent-gold);
-    display: inline-flex;
-    font-family: var(--mobile-font);
-    font-size: 38px;
-    font-weight: 300;
-    justify-content: center;
-    line-height: 1;
-    min-height: 64px;
-    padding: 0 0 4px;
-    position: fixed;
-    right: 22px;
-    width: 64px;
-    z-index: 42;
-  }
-
-  .mobile-task-fab:active {
-    transform: translateY(1px) scale(0.98);
   }
 
   .mobile-task-sheet {
@@ -2175,12 +2180,13 @@ pre, code {
   .mobile-row-action:active,
   .mobile-nav-button:active,
   .mobile-week-switcher button:active,
-  .mobile-capture-deposit-actions button:active,
+  .mobile-capture-segmented button:active,
   .mobile-day-task-toggle:active,
   .mobile-task-action-button:active,
   .mobile-task-edit-actions button:active,
   .mobile-system-row:active,
   .mobile-day-toggle:active,
+  .mobile-commitment-add:active,
   .mobile-task-cancel:active,
   .mobile-task-submit:active {
     transform: translateY(1px);
@@ -2583,6 +2589,48 @@ pre, code {
     min-height: 260px;
   }
 
+  .mobile-capture-segmented {
+    background: var(--mobile-surface);
+    border: 1px solid var(--mobile-muted-line);
+    border-radius: 999px;
+    display: grid;
+    gap: 6px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 4px;
+  }
+
+  .mobile-capture-segmented button {
+    align-items: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: var(--text-secondary);
+    display: flex;
+    font-family: var(--mobile-font);
+    gap: 8px;
+    justify-content: center;
+    min-height: 44px;
+    padding: 8px 10px;
+  }
+
+  .mobile-capture-segmented button.is-active,
+  .mobile-capture-segmented button[aria-selected="true"] {
+    background: color-mix(in srgb, var(--accent-gold) 10%, transparent);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+  }
+
+  .mobile-capture-segmented strong {
+    color: inherit;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .mobile-capture-segmented small {
+    color: var(--text-secondary);
+    font-size: 11px;
+  }
+
   .mobile-capture-composer h1 {
     font-size: 22px;
     line-height: 1.25;
@@ -2661,6 +2709,19 @@ pre, code {
   .mobile-capture-node-list {
     display: grid;
     gap: 8px;
+    padding-left: 0;
+    position: relative;
+  }
+
+  .mobile-capture-node-rail {
+    background: color-mix(in srgb, var(--accent-gold) 44%, var(--mobile-line));
+    bottom: 28px;
+    left: 26px;
+    pointer-events: none;
+    position: absolute;
+    top: 28px;
+    width: 2px;
+    z-index: 2;
   }
 
   .mobile-capture-node {
@@ -2674,8 +2735,10 @@ pre, code {
     grid-template-columns: 34px minmax(0, 1fr);
     min-height: 54px;
     padding: 9px 10px;
+    position: relative;
     text-align: left;
     width: 100%;
+    z-index: 1;
   }
 
   .mobile-capture-node.is-active {
@@ -2693,12 +2756,22 @@ pre, code {
   }
 
   .mobile-capture-node-index {
+    align-items: center;
+    background: var(--mobile-surface);
+    border: 1px solid currentColor;
+    border-radius: 50%;
     color: inherit;
+    display: inline-flex;
     font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 600;
     grid-row: span 2;
+    height: 34px;
+    justify-content: center;
     line-height: 1.2;
+    position: relative;
+    width: 34px;
+    z-index: 3;
   }
 
   .mobile-capture-node strong {
@@ -2851,47 +2924,6 @@ pre, code {
 
   .mobile-capture-save {
     min-height: 50px;
-  }
-
-  .mobile-capture-deposit {
-    display: grid;
-    gap: 12px;
-  }
-
-  .mobile-capture-deposit-actions {
-    display: grid;
-    gap: 8px;
-  }
-
-  .mobile-capture-deposit-actions button {
-    background: var(--mobile-surface-soft);
-    border: 1px solid var(--mobile-muted-line);
-    border-radius: 14px;
-    color: var(--text-secondary);
-    display: grid;
-    font-family: var(--mobile-font);
-    gap: 4px;
-    min-height: 58px;
-    padding: 10px 12px;
-    text-align: left;
-  }
-
-  .mobile-capture-deposit-actions button.is-active,
-  .mobile-capture-deposit-actions button[aria-pressed="true"] {
-    border-color: var(--accent-gold);
-    color: var(--accent-gold);
-  }
-
-  .mobile-capture-deposit-actions strong {
-    color: var(--text-primary);
-    font-size: 14px;
-    font-weight: 600;
-  }
-
-  .mobile-capture-deposit-actions small {
-    color: var(--text-secondary);
-    font-size: 12px;
-    line-height: 1.45;
   }
 
   .mobile-structured-composer {

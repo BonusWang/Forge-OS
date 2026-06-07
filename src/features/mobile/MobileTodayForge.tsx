@@ -93,13 +93,13 @@ const MobileTodayForge: React.FC = () => {
 
   return (
     <div className="mobile-today-forge">
-      <section className="mobile-daily-command" aria-labelledby="mobile-today-title">
+      <section className="mobile-daily-command mobile-today-focus-card" aria-labelledby="mobile-today-title">
         <div className="mobile-command-topline">
           <span>{format(new Date(today), 'yyyy年M月d日')}</span>
           <strong>今日锻造台</strong>
         </div>
         <div className="mobile-mainline-focus">
-          <span>今日主线</span>
+          <span>今日焦点</span>
           <h1 id="mobile-today-title">{mainLine}</h1>
         </div>
         <div className="mobile-status-pills" aria-label="今日状态">
@@ -191,12 +191,24 @@ const MobileTodayForge: React.FC = () => {
       </section>
 
       <section className="mobile-commitment-panel" aria-label="今日承诺">
-        <div className="mobile-section-heading">
-          <div>
-            <div className="mobile-card-label">今日承诺</div>
-            <h2>最多盯住三件事</h2>
+        <div className="mobile-commitment-title-row">
+          <div className="mobile-section-heading">
+            <div>
+              <div className="mobile-card-label">今日承诺</div>
+              <h2>最多盯住三件事</h2>
+            </div>
+            <span>{activeCommitments.length}</span>
           </div>
-          <span>{activeCommitments.length}</span>
+          <button
+            type="button"
+            className="mobile-commitment-add"
+            aria-label="添加今日任务"
+            aria-controls="mobile-task-sheet"
+            aria-expanded={isTaskComposerOpen}
+            onClick={() => setIsTaskComposerOpen(true)}
+          >
+            +
+          </button>
         </div>
         <div className="mobile-commitment-list">
           {activeCommitments.slice(0, 3).map((task) => (
@@ -235,24 +247,11 @@ const MobileTodayForge: React.FC = () => {
           ))}
           {activeCommitments.length === 0 && (
             <div className="mobile-empty-state">
-              今天没有待推进承诺。可以从桌面周看板安排。
+              今天没有待推进承诺。点右上角加号写下一件事。
             </div>
           )}
         </div>
       </section>
-
-      {!isTaskComposerOpen && (
-        <button
-          type="button"
-          className="mobile-task-fab"
-          aria-label="添加今日任务"
-          aria-controls="mobile-task-sheet"
-          aria-expanded={isTaskComposerOpen}
-          onClick={() => setIsTaskComposerOpen(true)}
-        >
-          +
-        </button>
-      )}
 
       {isTaskComposerOpen && (
         <form

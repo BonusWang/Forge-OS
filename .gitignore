@@ -15,6 +15,7 @@ dist
 dist-ssr
 *.local
 release
+tmp/
 .gstack/
 *.png_bak
 android/.gradle/

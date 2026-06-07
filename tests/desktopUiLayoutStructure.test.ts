@@ -17,21 +17,36 @@ test('desktop navigation separates monthly OKR and bottom system entry', () => {
   assert.match(app, /app-rail-icon/);
 });
 
-test('dossier visual style joins the existing style cycle without adding pages', () => {
+test('claude visual style replaces orbit while dossier remains in the style cycle', () => {
   const app = read('src/App.tsx');
 
-  assert.match(app, /type VisualStyle = 'classic' \| 'orbit' \| 'supabase' \| 'dossier'/);
+  assert.match(app, /type VisualStyle = 'classic' \| 'claude' \| 'supabase' \| 'dossier'/);
+  assert.match(app, /const claudeStyleTokens =/);
   assert.match(app, /const dossierStyleTokens =/);
+  assert.match(app, /const isClaudeStyle = visualStyle === 'claude'/);
   assert.match(app, /const isDossierStyle = visualStyle === 'dossier'/);
+  assert.match(app, /visualStyle === 'claude'\s*\?\s*claudeStyleTokens/);
   assert.match(app, /visualStyle === 'dossier'\s*\?\s*dossierStyleTokens/);
+  assert.match(app, /style === 'claude' \? 'Claude'/);
   assert.match(app, /visualStyle === 'dossier' \? 'Dossier'/);
+  assert.match(app, /if \(style === 'classic'\) return 'claude'/);
+  assert.match(app, /if \(style === 'claude'\) return 'supabase'/);
   assert.match(app, /if \(style === 'supabase'\) return 'dossier'/);
   assert.match(app, /return 'classic'/);
+  assert.match(app, /claude-style-shell/);
   assert.match(app, /dossier-style-shell/);
+  assert.match(app, /body\[data-alo-visual-style="claude"\]/);
   assert.match(app, /body\[data-alo-visual-style="dossier"\]/);
-  assert.match(app, /当前风格：\$\{visualStyleLabel\}。点击切换复古、Orbit、Supabase、Dossier 风格/);
+  assert.match(app, /当前风格：\$\{visualStyleLabel\}。点击切换复古、Claude、Supabase、Dossier 风格/);
+  assert.match(app, /visualStyle === 'claude' \? 'C'/);
   assert.match(app, /visualStyle === 'dossier' \? '档'/);
+  assert.match(app, /const normalizeVisualStyle =/);
+  assert.match(app, /value === 'orbit' \? 'claude'/);
+  assert.doesNotMatch(app, /type VisualStyle = 'classic' \| 'orbit'/);
+  assert.doesNotMatch(app, /const orbitStyleTokens =/);
+  assert.doesNotMatch(app, /orbit-style-shell/);
   assert.doesNotMatch(app, /setPage\('dossier'\)/);
+  assert.doesNotMatch(app, /setPage\('claude'\)/);
 });
 
 test('reflection library does not render the monthly OKR panel', () => {

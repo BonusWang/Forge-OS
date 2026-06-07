@@ -15,8 +15,8 @@ android {
         applicationId 'com.forgeos.app'
         minSdk 26
         targetSdk 35
-        versionCode 6
-        versionName '1.0.6'
+        versionCode 7
+        versionName '1.0.7'
     }
 
     sourceSets {
@@ -37,6 +37,9 @@ tasks.register('buildWebAssets', Exec) {
 
 tasks.register('syncWebAssets', Copy) {
     dependsOn buildWebAssets
+    doFirst {
+        delete new File(generatedAssetsDir, 'web')
+    }
     from rootProject.file('../dist')
     into new File(generatedAssetsDir, 'web')
 }

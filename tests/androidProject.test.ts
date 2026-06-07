@@ -14,7 +14,7 @@ test('Android project bundles Vite assets through a WebView app shell', () => {
   const buildScript = read('scripts/run-android-build.mjs');
 
   assert.match(appGradle, new RegExp(`versionName '${pkg.version}'`));
-  assert.match(appGradle, /versionCode 6/);
+  assert.match(appGradle, /versionCode 7/);
   assert.match(pkg.scripts['android:build'], /run-android-build\.mjs/);
   assert.match(pkg.scripts['android:install'], /run-android-install\.mjs/);
   assert.match(buildScript, /JAVA_HOME/);
@@ -23,6 +23,8 @@ test('Android project bundles Vite assets through a WebView app shell', () => {
   assert.match(manifest, /com\.forgeos\.app\.MainActivity/);
   assert.match(appGradle, /buildWebAssets/);
   assert.match(appGradle, /syncWebAssets/);
+  assert.match(appGradle, /doFirst\s*\{/);
+  assert.match(appGradle, /delete new File\(generatedAssetsDir, 'web'\)/);
   assert.match(appGradle, /androidx\.webkit:webkit/);
   assert.match(mainActivity, /WebViewAssetLoader/);
   assert.match(mainActivity, /https:\/\/appassets\.androidplatform\.net\/assets\/web\/index\.html/);
