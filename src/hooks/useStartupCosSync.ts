@@ -1,24 +1,38 @@
 import { useEffect, useRef } from 'react';
-import { createCosSyncClient } from '../sync/cosSyncClient';
-import { backupObjectKey, syncObjectKey } from '../sync/cosObjectKeys';
+import { entitySyncObjectKey, syncObjectKey } from '../sync/cosObjectKeys';
 import {
   createDirectCosCredentialProvider,
   hasDirectCosCredentials,
 } from '../sync/directCosCredentialProvider';
 import { createHttpCosCredentialProvider } from '../sync/httpCosCredentialProvider';
-import type { ManualSyncResult } from '../sync/manualSync';
-import { runStartupSync } from '../sync/startupSync';
+import { isV3SyncEnvelope } from '../sync/v3/v3SyncEnvelope.ts';
+import { createV3SyncClient } from '../sync/v3/v3SyncClient.ts';
+import { createV3SyncOwner, v3SyncObjectKey } from '../sync/v3/v3SyncNamespace.ts';
+import { runV3Sync, type V3SyncResult } from '../sync/v3/v3SyncRunner.ts';
 import { useAppStore } from '../store/useAppStore';
 import { APP_VERSION } from '../utils/checkUpdate';
-import { createStorageRecordFromAppState } from '../utils/storageRecord';
 
-const applyStartupResult = (result: ManualSyncResult) => {
+const createCredentialProvider = (syncConfig: ReturnType<typeof useAppStore.getState>['syncConfig']) =>
+  hasDirectCosCredentials(syncConfig)
+    ? createDirectCosCredentialProvider({
+        accessKeyId: syncConfig.accessKeyId ?? '',
+        secretAccessKey: syncConfig.secretAccessKey ?? '',
+        bucket: syncConfig.bucket,
+        region: syncConfig.region,
+        endpoint: syncConfig.endpoint,
+      })
+    : createHttpCosCredentialProvider({
+        endpoint: syncConfig.credentialProviderUrl,
+      });
+
+const legacyObjectKeys = (syncConfig: ReturnType<typeof useAppStore.getState>['syncConfig']) => [
+  syncObjectKey(syncConfig),
+  entitySyncObjectKey(syncConfig),
+];
+
+const applyStartupV3Result = (result: V3SyncResult): void => {
   const state = useAppStore.getState();
   const deviceId = state.syncStatus.deviceId;
-
-  if (result.phase === 'idle') {
-    return;
-  }
 
   if (result.phase === 'not-configured') {
     state.setSyncStatus({ phase: 'not-configured' });
@@ -26,49 +40,49 @@ const applyStartupResult = (result: ManualSyncResult) => {
   }
 
   if (result.phase === 'error') {
-    state.setSyncStatus({ phase: 'error', lastError: result.error });
-    return;
-  }
-
-  if (result.phase === 'conflict') {
-    if ('localRevision' in result) {
-      state.setSyncStatus({
-        phase: 'conflict',
-        lastError: '启动同步检测到本地和云端同时变化',
-        conflict: {
-          localRevision: result.localRevision,
-          remoteRevision: result.remoteRevision,
-          localUpdatedAt: result.localUpdatedAt,
-          remoteUpdatedAt: result.remoteUpdatedAt,
-          backupKey: result.backupKey,
-        },
-      });
-    }
-    return;
-  }
-
-  if (result.state) {
-    useAppStore.setState({
-      ...result.state,
-      syncConfig: state.syncConfig,
-      syncStatus: {
-        phase: 'success',
-        deviceId,
-        lastSyncedAt: new Date().toISOString(),
-        lastSyncedRevision: result.revision,
-        lastLocalUpdatedAt: undefined,
-      },
+    state.setSyncStatus({
+      phase: 'error',
+      lastError: result.error,
+      v3SyncLastError: result.error,
     });
     return;
   }
 
-  state.setSyncStatus({
-    phase: 'success',
-    lastSyncedAt: new Date().toISOString(),
-    lastSyncedRevision: result.revision,
-    lastLocalUpdatedAt: undefined,
-    lastError: undefined,
-    conflict: undefined,
+  if (result.phase === 'conflict') {
+    state.setSyncStatus({
+      phase: 'conflict',
+      lastError: `启动 V3 同步检测到 ${result.conflicts.length} 个字段冲突`,
+      conflict: undefined,
+      v3SyncRevision: result.revision,
+      v3SyncBase: result.baseEnvelope,
+      v3SyncNamespace: result.baseEnvelope.owner.namespace,
+      v3SyncAutoMerged: result.autoMerged,
+      v3SyncConflicts: result.conflicts.length,
+      v3SyncLastError: undefined,
+    });
+    return;
+  }
+
+  useAppStore.setState({
+    ...result.state,
+    syncConfig: state.syncConfig,
+    syncStatus: {
+      ...state.syncStatus,
+      phase: 'success',
+      deviceId,
+      lastSyncedAt: new Date().toISOString(),
+      lastLocalUpdatedAt: undefined,
+      lastError: undefined,
+      conflict: undefined,
+      v3SyncRevision: result.revision,
+      v3SyncBase: result.baseEnvelope,
+      v3SyncNamespace: result.baseEnvelope.owner.namespace,
+      v3SyncInitializedAt:
+        state.syncStatus.v3SyncInitializedAt ?? result.baseEnvelope.updatedAt,
+      v3SyncAutoMerged: result.autoMerged,
+      v3SyncConflicts: result.conflicts.length,
+      v3SyncLastError: undefined,
+    },
   });
 };
 
@@ -81,38 +95,31 @@ export const useStartupCosSync = () => {
 
     const state = useAppStore.getState();
     const { syncConfig, syncStatus } = state;
-    if (!syncConfig.enabled || !syncStatus.lastSyncedRevision) return;
+    if (!syncConfig.enabled || (!syncStatus.v3SyncRevision && !syncStatus.lastSyncedRevision)) return;
 
     const run = async () => {
       state.setSyncStatus({ phase: 'syncing', lastError: undefined });
-      const client = createCosSyncClient({
-        credentialProvider: hasDirectCosCredentials(syncConfig)
-          ? createDirectCosCredentialProvider({
-              accessKeyId: syncConfig.accessKeyId ?? '',
-              secretAccessKey: syncConfig.secretAccessKey ?? '',
-              bucket: syncConfig.bucket,
-              region: syncConfig.region,
-              endpoint: syncConfig.endpoint,
-            })
-          : createHttpCosCredentialProvider({
-              endpoint: syncConfig.credentialProviderUrl,
-            }),
-      });
+      const credentialProvider = createCredentialProvider(syncConfig);
 
-      const result = await runStartupSync({
+      const result = await runV3Sync({
         config: syncConfig,
-        client,
-        key: syncObjectKey(syncConfig),
-        backupKey: backupObjectKey(syncConfig, syncStatus.deviceId),
+        client: createV3SyncClient({
+          credentialProvider,
+          appVersion: APP_VERSION,
+          owner: createV3SyncOwner(syncConfig),
+        }),
+        key: v3SyncObjectKey(syncConfig),
+        legacyObjectKeys: legacyObjectKeys(syncConfig),
         appVersion: APP_VERSION,
         deviceId: syncStatus.deviceId,
-        storageRecord: createStorageRecordFromAppState(state),
-        lastSyncedRevision: syncStatus.lastSyncedRevision,
+        state,
+        baseEnvelope: isV3SyncEnvelope(syncStatus.v3SyncBase)
+          ? syncStatus.v3SyncBase
+          : undefined,
         hasLocalChanges: Boolean(syncStatus.lastLocalUpdatedAt),
-        localUpdatedAt: syncStatus.lastLocalUpdatedAt,
       });
 
-      applyStartupResult(result);
+      applyStartupV3Result(result);
     };
 
     run().catch((error) => {

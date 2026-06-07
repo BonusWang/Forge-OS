@@ -20,9 +20,10 @@ test('System page renders the COS sync panel and exposes expected controls', () 
   assert.match(syncPanel, /accessKeyId/);
   assert.match(syncPanel, /secretAccessKey/);
   assert.match(syncPanel, /createDirectCosCredentialProvider/);
-  assert.match(syncPanel, /runManualSync/);
-  assert.match(syncPanel, /resolveSyncConflict/);
-  assert.match(syncPanel, /recommendConflictChoice/);
+  assert.match(syncPanel, /runV3Sync/);
+  assert.match(syncPanel, /createV3SyncClient/);
+  assert.match(syncPanel, /v3SyncObjectKey/);
+  assert.match(syncPanel, /legacyObjectKeys/);
 });
 
 test('COS sync panel uses mobile settings sections instead of a desktop form table', () => {
@@ -39,12 +40,35 @@ test('COS sync panel uses mobile settings sections instead of a desktop form tab
   assert.match(syncPanel, /修改配置/);
   assert.match(syncPanel, /sync-config-summary/);
   assert.match(syncPanel, /const activeConfig = isConfigOpen \? form : syncConfig/);
-  assert.match(syncPanel, /createClient\(activeConfig\)/);
-  assert.match(syncPanel, /applyResult\(result, activeConfig\)/);
+  assert.match(syncPanel, /createV3Client\(activeConfig\)/);
+  assert.match(syncPanel, /applyV3Result\(result, activeConfig\)/);
   assert.match(syncPanel, /lastLocalUpdatedAt/);
   assert.match(syncPanel, /hasLocalChanges:\s*Boolean\(syncStatus\.lastLocalUpdatedAt\)/);
-  assert.match(syncPanel, /localUpdatedAt:\s*syncStatus\.lastLocalUpdatedAt/);
+  assert.match(syncPanel, /V3 命名空间/);
+  assert.match(syncPanel, /V3 基线/);
+  assert.match(syncPanel, /!\s*hasActiveV3SyncStatus\s*&&/);
+  assert.match(syncPanel, /V3 合并/);
+  assert.match(syncPanel, /V3 冲突/);
+  assert.match(syncPanel, /v3SyncNamespace/);
+  assert.match(syncPanel, /v3SyncRevision/);
+  assert.match(syncPanel, /v3SyncAutoMerged/);
+  assert.match(syncPanel, /v3SyncConflicts/);
   assert.doesNotMatch(syncPanel, /hasLocalChanges:\s*true/);
+  assert.doesNotMatch(syncPanel, /runEntitySync/);
+  assert.doesNotMatch(syncPanel, /runManualSync/);
+});
+
+test('COS sync panel keeps legacy baseline out of the main V3 status', () => {
+  const syncPanel = read('src/features/system/SyncPanel.tsx');
+
+  assert.match(syncPanel, /hasActiveV3SyncStatus/);
+  assert.match(syncPanel, /syncStatus\.v3SyncRevision/);
+  assert.match(syncPanel, /syncStatus\.v3SyncInitializedAt/);
+  assert.match(syncPanel, /!\s*hasActiveV3SyncStatus\s*&&/);
+  assert.match(syncPanel, /sync-legacy-diagnostics/);
+  assert.match(syncPanel, /<summary>旧版诊断<\/summary>/);
+  assert.match(syncPanel, /旧版基线/);
+  assert.doesNotMatch(syncPanel, /!\s*syncStatus\.v3SyncRevision\s*&&\s*\(\s*<span>基线/);
 });
 
 test('mobile UI CSS keeps sync fields usable and replaces the desktop task board with the mobile shell', () => {

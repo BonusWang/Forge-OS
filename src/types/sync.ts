@@ -14,6 +14,7 @@ export interface CosSyncConfig {
   region: string;
   bucket: string;
   profileId: string;
+  userId?: string;
   objectPrefix: string;
   credentialProviderUrl: string;
   accessKeyId?: string;
@@ -64,6 +65,13 @@ export interface SyncStatus {
   lastLocalUpdatedAt?: string;
   lastError?: string;
   conflict?: SyncConflictState;
+  v3SyncRevision?: string;
+  v3SyncBase?: unknown;
+  v3SyncNamespace?: string;
+  v3SyncInitializedAt?: string;
+  v3SyncAutoMerged?: number;
+  v3SyncConflicts?: number;
+  v3SyncLastError?: string;
 }
 
 export interface CosSyncEnvelope {

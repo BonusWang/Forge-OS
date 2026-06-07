@@ -11,14 +11,19 @@ test('App wires startup COS sync through a dedicated hook', () => {
   const hook = read('src/hooks/useStartupCosSync.ts');
 
   assert.match(app, /useStartupCosSync/);
-  assert.match(hook, /runStartupSync/);
+  assert.match(hook, /runV3Sync/);
+  assert.match(hook, /createV3SyncClient/);
+  assert.match(hook, /v3SyncObjectKey/);
+  assert.match(hook, /v3SyncRevision/);
+  assert.match(hook, /v3SyncBase/);
+  assert.match(hook, /legacyObjectKeys/);
   assert.match(hook, /lastSyncedRevision/);
   assert.match(hook, /createHttpCosCredentialProvider/);
   assert.match(hook, /createDirectCosCredentialProvider/);
   assert.match(hook, /hasDirectCosCredentials/);
-  assert.match(hook, /createStorageRecordFromAppState/);
   assert.match(hook, /lastLocalUpdatedAt/);
   assert.match(hook, /hasLocalChanges:\s*Boolean\(syncStatus\.lastLocalUpdatedAt\)/);
-  assert.match(hook, /localUpdatedAt:\s*syncStatus\.lastLocalUpdatedAt/);
   assert.doesNotMatch(hook, /hasLocalChanges:\s*true/);
+  assert.doesNotMatch(hook, /runEntitySync/);
+  assert.doesNotMatch(hook, /runStartupSync/);
 });

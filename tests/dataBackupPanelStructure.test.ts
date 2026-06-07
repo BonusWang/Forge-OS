@@ -28,6 +28,10 @@ test('Data backup panel keeps local import/export and history restore controls',
   assert.match(panel, /handleImport/);
   assert.match(panel, /restoreHistoryButton/);
   assert.match(panel, /restoreCloudSnapshot/);
+  assert.match(panel, /V3_REBASE_REQUIRED_MESSAGE/);
+  assert.match(panel, /lastSyncedRevision:\s*undefined/);
+  assert.match(panel, /v3SyncRevision:\s*undefined/);
+  assert.match(panel, /v3SyncBase:\s*undefined/);
   assert.match(panel, /HISTORY_LIMIT\s*=\s*5/);
   assert.match(panel, /slice\(0,\s*HISTORY_LIMIT\)/);
   assert.match(panel, /同步时间/);

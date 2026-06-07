@@ -8,6 +8,9 @@ export const cosObjectPrefix = (config: Pick<CosSyncConfig, 'objectPrefix'>): st
 export const syncObjectKey = (config: Pick<CosSyncConfig, 'objectPrefix'>): string =>
   `${cosObjectPrefix(config)}/alo-data.sync.json`;
 
+export const entitySyncObjectKey = (config: Pick<CosSyncConfig, 'objectPrefix'>): string =>
+  `${cosObjectPrefix(config)}/alo-data.entities.v2.json`;
+
 export const backupObjectKey = (
   config: Pick<CosSyncConfig, 'objectPrefix'>,
   deviceId: string,

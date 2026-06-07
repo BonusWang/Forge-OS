@@ -1,83 +1,5 @@
-# 腾讯云COS数据同步 Specification
-
-## Purpose
-定义 Forge-OS 使用腾讯云 COS 进行本地优先数据备份、恢复、跨端同步、冲突检测和同步状态展示的要求。
-
-## Requirements
-### Requirement: COS sync can be configured safely / COS 同步可安全配置
-
-系统 MUST（必须）允许用户配置腾讯云 COS 同步参数，支持签名服务和本机手动密钥两种授权方式，并确保密钥不进入云端同步载荷。
-
-#### Scenario: User configures COS sync profile / 用户配置 COS 同步资料
-
-- **WHEN** 用户在系统页填写 COS endpoint、region、bucket、profileId、objectPrefix 和签名服务地址
-- **THEN** 系统保存同步配置
-- **AND** 同步状态显示为已配置但不丢弃本地数据
-
-#### Scenario: User configures manual COS keys / 用户配置手动 COS 密钥
-
-- **WHEN** 用户在系统页填写 Access Key ID 和 Secret Access Key
-- **THEN** 系统将密钥保存到本机同步配置以便后续同步使用
-- **AND** 系统使用手动密钥生成 COS 签名 URL 直连访问云端对象
-
-#### Scenario: Manual secrets are excluded from cloud snapshots / 手动密钥不进入云端快照
-
-- **WHEN** 系统生成 COS 主同步对象或历史快照
-- **THEN** 快照中的 syncConfig 不包含 accessKeyId 或 secretAccessKey
-- **AND** 长期密钥不会被上传到 COS、写入仓库或打包到 Android APK
-
-### Requirement: COS sync uses versioned snapshots / COS 同步使用带版本快照
-
-系统 MUST（必须）以带元数据的同步对象同步 Forge-OS 持久化数据。日常跨端同步 MUST 优先使用 V3 实体文档；v1 整份快照和历史快照仅作为手工备份、恢复或 V3 失败时的回退通道。
-
-#### Scenario: Local data uploads as V3 entity envelope / 本地数据以 V3 实体信封上传
-
-- **WHEN** 用户触发上传或自动同步上传
-- **THEN** 系统将当前 AppState 转换为 V3 实体文档写入 COS 对象
-- **AND** 对象包含 schemaVersion、appVersion、deviceId、namespace、profileId、revision、updatedAt、checksum、entities、tombstones 和 conflicts
-- **AND** 系统保存上传后的 V3 对象为本地共同基线
-
-#### Scenario: Browser and Android share the default V3 object path / 浏览器和 Android 共用默认 V3 路径
-
-- **WHEN** 用户使用默认 COS 同步路径
-- **THEN** 系统使用当前命名空间下的 `alo-data.entities.v3.json` 作为 V3 主同步对象
-- **AND** 浏览器端和 Android App 默认读写同一份 V3 云端实体文档
-
-#### Scenario: Successful legacy backup creates history snapshot / 成功旧快照备份创建历史快照
-
-- **WHEN** 用户显式执行手工云端备份或历史恢复辅助操作
-- **THEN** 系统可以在 `snapshots/` 前缀下写入一份历史快照
-- **AND** 历史快照文件名使用无冒号时间戳，避免 COS 签名路径校验失败
-- **AND** 该历史快照 MUST NOT 参与 V3 日常合并决策
-
-#### Scenario: Remote V3 object is validated before import / 导入前校验云端 V3 对象
-
-- **WHEN** 系统从 COS 下载 V3 对象
-- **THEN** 系统校验对象结构和 checksum
-- **AND** 校验失败时不覆盖本地数据
-
-#### Scenario: Browser COS access requires CORS / 浏览器访问 COS 需要 CORS
-
-- **WHEN** 系统通过浏览器或 Android WebView 直连 COS
-- **THEN** Bucket CORS 必须允许 GET、PUT、HEAD 和 `Content-Type` 预检
-- **AND** CORS 未配置或未命中时，系统显示可理解的 COS 连接失败提示
-
-### Requirement: COS sync remains local-first / COS 同步保持本地优先
-
-系统 MUST（必须）在同步失败、未配置或网络不可用时继续允许本地读写。
-
-#### Scenario: Sync disabled keeps local app usable / 未启用同步时本地应用可用
-
-- **WHEN** 用户没有启用 COS 同步
-- **THEN** 系统继续使用本地数据启动和保存
-- **AND** 不要求用户先配置 COS
-
-#### Scenario: Upload failure keeps local data / 上传失败保留本地数据
-
-- **WHEN** 系统尝试上传本地快照到 COS
-- **AND** 网络或 COS 服务返回失败
-- **THEN** 系统保留本地数据
-- **AND** 同步状态记录失败原因供用户稍后重试
+## ADDED Requirements
+> 中文：新增需求
 
 ### Requirement: COS sync initializes a clean V3 baseline / COS 同步初始化干净 V3 基线
 
@@ -182,6 +104,45 @@
 - **AND** 用户再次触发同步
 - **THEN** 系统 MUST 展示相同冲突状态
 - **AND** 系统 MUST NOT 反复创建重复冲突记录
+
+## MODIFIED Requirements
+> 中文：修改需求
+
+### Requirement: COS sync uses versioned snapshots / COS 同步使用带版本快照
+
+系统 MUST（必须）以带元数据的同步对象同步 Forge-OS 持久化数据。日常跨端同步 MUST 优先使用 V3 实体文档；v1 整份快照和历史快照仅作为手工备份、恢复或 V3 失败时的回退通道。
+
+#### Scenario: Local data uploads as V3 entity envelope / 本地数据以 V3 实体信封上传
+
+- **WHEN** 用户触发上传或自动同步上传
+- **THEN** 系统将当前 AppState 转换为 V3 实体文档写入 COS 对象
+- **AND** 对象包含 schemaVersion、appVersion、deviceId、namespace、profileId、revision、updatedAt、checksum、entities、tombstones 和 conflicts
+- **AND** 系统保存上传后的 V3 对象为本地共同基线
+
+#### Scenario: Browser and Android share the default V3 object path / 浏览器和 Android 共用默认 V3 路径
+
+- **WHEN** 用户使用默认 COS 同步路径
+- **THEN** 系统使用当前命名空间下的 `alo-data.entities.v3.json` 作为 V3 主同步对象
+- **AND** 浏览器端和 Android App 默认读写同一份 V3 云端实体文档
+
+#### Scenario: Successful legacy backup creates history snapshot / 成功旧快照备份创建历史快照
+
+- **WHEN** 用户显式执行手工云端备份或历史恢复辅助操作
+- **THEN** 系统可以在 `snapshots/` 前缀下写入一份历史快照
+- **AND** 历史快照文件名使用无冒号时间戳，避免 COS 签名路径校验失败
+- **AND** 该历史快照 MUST NOT 参与 V3 日常合并决策
+
+#### Scenario: Remote V3 object is validated before import / 导入前校验云端 V3 对象
+
+- **WHEN** 系统从 COS 下载 V3 对象
+- **THEN** 系统校验对象结构和 checksum
+- **AND** 校验失败时不覆盖本地数据
+
+#### Scenario: Browser COS access requires CORS / 浏览器访问 COS 需要 CORS
+
+- **WHEN** 系统通过浏览器或 Android WebView 直连 COS
+- **THEN** Bucket CORS 必须允许 GET、PUT、HEAD 和 `Content-Type` 预检
+- **AND** CORS 未配置或未命中时，系统显示可理解的 COS 连接失败提示
 
 ### Requirement: COS sync detects and resolves conflicts / COS 同步检测并处理冲突
 

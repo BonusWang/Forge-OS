@@ -25,6 +25,7 @@ const MobileWeekProgress: React.FC = () => {
   const tasks = useAppStore((s) => s.tasks);
   const reflections = useAppStore((s) => s.reflections);
   const saveReflection = useAppStore((s) => s.saveReflection);
+  const addTask = useAppStore((s) => s.addTask);
   const toggleTask = useAppStore((s) => s.toggleTask);
   const updateTask = useAppStore((s) => s.updateTask);
   const moveTask = useAppStore((s) => s.moveTask);
@@ -35,6 +36,7 @@ const MobileWeekProgress: React.FC = () => {
   const weekDates = getWeekDates(selectedWeekStart);
   const periodEnd = weekDates[6];
   const weekTasks = tasks.filter((task) => weekDates.includes(task.date));
+  const backlogTasks = tasks.filter((task) => task.date === 'BACKLOG').sort((a, b) => a.order - b.order);
   const completedCount = weekTasks.filter((task) => task.status === 'completed').length;
   const activeCount = weekTasks.length - completedCount;
   const completionRatio = weekTasks.length === 0 ? 0 : Math.round((completedCount / weekTasks.length) * 100);
@@ -51,6 +53,9 @@ const MobileWeekProgress: React.FC = () => {
   const [editingTaskId, setEditingTaskId] = useState('');
   const [editingContent, setEditingContent] = useState('');
   const [pendingDeleteTaskId, setPendingDeleteTaskId] = useState('');
+  const [backlogInput, setBacklogInput] = useState('');
+  const [scheduleTaskId, setScheduleTaskId] = useState('');
+  const [customScheduleDate, setCustomScheduleDate] = useState('');
   const canSaveReview = done.trim().length > 0 && nextOne.trim().length > 0;
   const isCurrentWeek = selectedWeekStart === currentWeekStart;
   const reviewDone = getTextAnswer(existingReview, ['weekly-done', 'weekly-facts']);
@@ -66,6 +71,8 @@ const MobileWeekProgress: React.FC = () => {
     setEditingTaskId('');
     setEditingContent('');
     setPendingDeleteTaskId('');
+    setScheduleTaskId('');
+    setCustomScheduleDate('');
     setExpandedDates(new Set());
     setCollapsedDates(new Set());
   };
@@ -134,6 +141,20 @@ const MobileWeekProgress: React.FC = () => {
     const order = tasks.filter((task) => task.date === targetDate).length;
     moveTask(taskId, targetDate, order);
     setPendingDeleteTaskId('');
+    setScheduleTaskId('');
+    setCustomScheduleDate('');
+  };
+
+  const addBacklogTask = () => {
+    const content = backlogInput.trim();
+    if (!content) return;
+    addTask(backlogInput.trim(), 'BACKLOG');
+    setBacklogInput('');
+  };
+
+  const scheduleBacklogTask = (targetDate: string) => {
+    if (!scheduleTaskId || !targetDate) return;
+    moveTaskToDate(scheduleTaskId, targetDate);
   };
 
   const deleteTaskWithConfirmation = (taskId: string) => {
@@ -183,18 +204,66 @@ const MobileWeekProgress: React.FC = () => {
             <p>{task.content}</p>
           )}
           <div className="mobile-task-action-bar" aria-label={`${task.content} 操作`}>
-            <button type="button" onClick={() => startTaskEdit(task)}>
+            <button type="button" className="mobile-task-action-button" onClick={() => startTaskEdit(task)}>
               编辑
             </button>
-            <button type="button" onClick={() => moveTaskToDate(task.id, tomorrow)}>
+            <button type="button" className="mobile-task-action-button" onClick={() => moveTaskToDate(task.id, tomorrow)}>
               明天
             </button>
-            <button type="button" onClick={() => moveTaskToDate(task.id, 'BACKLOG')}>
+            <button type="button" className="mobile-task-action-button" onClick={() => moveTaskToDate(task.id, 'BACKLOG')}>
               收纳
             </button>
             <button
               type="button"
-              className={isPendingDelete ? 'is-danger-confirm' : ''}
+              className={`mobile-task-action-button${isPendingDelete ? ' is-danger-confirm' : ''}`}
+              onClick={() => deleteTaskWithConfirmation(task.id)}
+            >
+              {isPendingDelete ? '确认删除' : '删除'}
+            </button>
+          </div>
+        </div>
+      </article>
+    );
+  };
+
+  const renderBacklogTaskRow = (task: Task) => {
+    const isEditing = editingTaskId === task.id;
+    const isPendingDelete = pendingDeleteTaskId === task.id;
+
+    return (
+      <article className="mobile-day-task mobile-backlog-task" key={task.id}>
+        <div className="mobile-backlog-task-marker" aria-hidden="true">收</div>
+        <div className="mobile-day-task-body">
+          {isEditing ? (
+            <div className="mobile-task-edit-panel">
+              <input
+                className="mobile-task-edit-input"
+                value={editingContent}
+                onChange={(event) => setEditingContent(event.target.value)}
+                aria-label="编辑收纳任务描述"
+              />
+              <div className="mobile-task-edit-actions">
+                <button type="button" onClick={() => saveTaskEdit(task.id)} disabled={editingContent.trim().length === 0}>
+                  保存
+                </button>
+                <button type="button" onClick={() => setEditingTaskId('')}>
+                  取消
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p>{task.content}</p>
+          )}
+          <div className="mobile-task-action-bar" aria-label={`${task.content} 收纳操作`}>
+            <button type="button" className="mobile-task-action-button" onClick={() => setScheduleTaskId(task.id)}>
+              安排
+            </button>
+            <button type="button" className="mobile-task-action-button" onClick={() => startTaskEdit(task)}>
+              编辑
+            </button>
+            <button
+              type="button"
+              className={`mobile-task-action-button${isPendingDelete ? ' is-danger-confirm' : ''}`}
               onClick={() => deleteTaskWithConfirmation(task.id)}
             >
               {isPendingDelete ? '确认删除' : '删除'}
@@ -354,6 +423,73 @@ const MobileWeekProgress: React.FC = () => {
           );
         })}
       </div>
+
+      <section className="mobile-backlog-inbox" aria-label="跨周收纳箱">
+        <div className="mobile-section-heading">
+          <div>
+            <span>跨周公共池</span>
+            <h2>收纳箱</h2>
+          </div>
+          <span>{backlogTasks.length}</span>
+        </div>
+        <p className="mobile-backlog-copy">不确定日期的任务先放这里，想清楚后再安排到具体一天。</p>
+        <div className="mobile-backlog-composer">
+          <input
+            value={backlogInput}
+            onChange={(event) => setBacklogInput(event.target.value)}
+            placeholder="新增一个待安排任务"
+            aria-label="新增收纳任务"
+          />
+          <button type="button" onClick={addBacklogTask} disabled={backlogInput.trim().length === 0}>
+            新增
+          </button>
+        </div>
+        <div className="mobile-backlog-task-list">
+          {backlogTasks.length === 0 ? (
+            <div className="mobile-empty-state">收纳后会在这里统一处理。</div>
+          ) : (
+            backlogTasks.map(renderBacklogTaskRow)
+          )}
+        </div>
+      </section>
+
+      {scheduleTaskId && (
+        <div className="mobile-backlog-schedule-sheet" role="dialog" aria-label="安排收纳任务">
+          <div className="mobile-section-heading">
+            <div>
+              <span>安排到日期</span>
+              <h2>选择本周某一天</h2>
+            </div>
+            <button type="button" onClick={() => setScheduleTaskId('')}>
+              关闭
+            </button>
+          </div>
+          <div className="mobile-backlog-week-grid">
+            {weekDates.map((targetDate) => (
+              <button key={targetDate} type="button" onClick={() => scheduleBacklogTask(targetDate)}>
+                <span>{getDateLabelForDay(getDayColumnFromDate(new Date(targetDate)))}</span>
+                <strong>{format(new Date(targetDate), 'MM/dd')}</strong>
+              </button>
+            ))}
+          </div>
+          <label className="mobile-backlog-custom-date">
+            <span>选择其他日期</span>
+            <input
+              type="date"
+              value={customScheduleDate}
+              onChange={(event) => setCustomScheduleDate(event.target.value)}
+            />
+          </label>
+          <button
+            type="button"
+            className="mobile-primary-button"
+            disabled={!customScheduleDate}
+            onClick={() => scheduleBacklogTask(customScheduleDate)}
+          >
+            安排到其他日期
+          </button>
+        </div>
+      )}
     </div>
   );
 };

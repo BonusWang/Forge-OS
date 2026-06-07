@@ -64,6 +64,28 @@ const formatDateTime = (value?: string): string => {
   ].join(' ');
 };
 
+const V3_REBASE_REQUIRED_MESSAGE = '历史恢复完成后需要重新初始化或刷新 V3 基线';
+
+const clearV3SyncStatusAfterRestore = (
+  syncStatus: ReturnType<typeof useAppStore.getState>['syncStatus'],
+  deviceId: string
+) => ({
+  ...syncStatus,
+  phase: 'idle' as const,
+  deviceId,
+  lastLocalUpdatedAt: new Date().toISOString(),
+  lastError: V3_REBASE_REQUIRED_MESSAGE,
+  lastSyncedRevision: undefined,
+  conflict: undefined,
+  v3SyncRevision: undefined,
+  v3SyncBase: undefined,
+  v3SyncNamespace: undefined,
+  v3SyncInitializedAt: undefined,
+  v3SyncAutoMerged: 0,
+  v3SyncConflicts: 0,
+  v3SyncLastError: V3_REBASE_REQUIRED_MESSAGE,
+});
+
 const buttonStyle: React.CSSProperties = {
   background: 'none',
   border: '1px solid var(--border-primary)',
@@ -157,11 +179,14 @@ const DataBackupPanel: React.FC = () => {
           inspirations: json.inspirations ?? [],
           reflectionTemplates: json.reflectionTemplates ?? [],
           syncConfig: json.syncConfig ?? store.syncConfig,
-          syncStatus: json.syncStatus ?? store.syncStatus,
+          syncStatus: clearV3SyncStatusAfterRestore(
+            json.syncStatus ?? store.syncStatus,
+            store.syncStatus.deviceId
+          ),
           __version: json.__version ?? '0.1.1',
         });
 
-        setStatusMessage(systemCopy.backup.importSuccess);
+        setStatusMessage(`${systemCopy.backup.importSuccess}，${V3_REBASE_REQUIRED_MESSAGE}`);
         setTimeout(() => {
           window.location.reload();
         }, 800);
@@ -208,22 +233,38 @@ const DataBackupPanel: React.FC = () => {
           phase: 'success',
           deviceId,
           lastSyncedAt: new Date().toISOString(),
-          lastSyncedRevision: result.revision,
-          lastLocalUpdatedAt: undefined,
+          lastSyncedRevision: undefined,
+          lastLocalUpdatedAt: new Date().toISOString(),
+          lastError: V3_REBASE_REQUIRED_MESSAGE,
+          conflict: undefined,
+          v3SyncRevision: undefined,
+          v3SyncBase: undefined,
+          v3SyncNamespace: undefined,
+          v3SyncInitializedAt: undefined,
+          v3SyncAutoMerged: 0,
+          v3SyncConflicts: 0,
+          v3SyncLastError: V3_REBASE_REQUIRED_MESSAGE,
         },
       });
     } else {
       current.setSyncStatus({
         phase: 'success',
         lastSyncedAt: new Date().toISOString(),
-        lastSyncedRevision: result.revision,
-        lastLocalUpdatedAt: undefined,
-        lastError: undefined,
+        lastSyncedRevision: undefined,
+        lastLocalUpdatedAt: new Date().toISOString(),
+        lastError: V3_REBASE_REQUIRED_MESSAGE,
         conflict: undefined,
+        v3SyncRevision: undefined,
+        v3SyncBase: undefined,
+        v3SyncNamespace: undefined,
+        v3SyncInitializedAt: undefined,
+        v3SyncAutoMerged: 0,
+        v3SyncConflicts: 0,
+        v3SyncLastError: V3_REBASE_REQUIRED_MESSAGE,
       });
     }
 
-    setStatusMessage(systemCopy.backup.historyRestoreSuccess);
+    setStatusMessage(`${systemCopy.backup.historyRestoreSuccess}，${V3_REBASE_REQUIRED_MESSAGE}`);
     setTimeout(() => {
       window.location.reload();
     }, 800);

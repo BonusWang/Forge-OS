@@ -15,8 +15,46 @@ import { checkUpdate, APP_VERSION } from './utils/checkUpdate';
 import { systemCopy } from './copy/system-copy';
 import { aloCopy } from './copy/alo-copy';
 import { resources } from './utils/assets';
+import { platformStorage } from './utils/platformStorage';
 
-type VisualStyle = 'classic' | 'orbit' | 'supabase';
+type VisualStyle = 'classic' | 'orbit' | 'supabase' | 'dossier';
+
+const MOBILE_VISUAL_STYLE_LOCAL_KEY = 'forge-os.mobileVisualStyleLocal';
+const MOBILE_VISUAL_STYLE_KEY = 'forge-os.mobileVisualStyle';
+
+const classicDarkStyleTokens = {
+  '--bg-primary': '#1c1610',
+  '--bg-secondary': '#241e16',
+  '--bg-tertiary': '#2c261e',
+  '--text-primary': '#b0a080',
+  '--text-secondary': '#5a5040',
+  '--text-muted': '#3d3528',
+  '--accent-gold': '#a08040',
+  '--accent-success': '#5a7a5a',
+  '--accent-danger': '#7a3030',
+  '--border-primary': '#3d3528',
+  '--border-hover': '#504838',
+  '--font-display': '"JetBrains Mono", "Courier New", Consolas, monospace',
+  '--font-sans': '"JetBrains Mono", "Courier New", Consolas, monospace',
+  '--font-mono': '"JetBrains Mono", "Courier New", Consolas, monospace',
+} as CSSProperties;
+
+const classicLightStyleTokens = {
+  '--bg-primary': '#e8e0d0',
+  '--bg-secondary': '#dcd4c4',
+  '--bg-tertiary': '#d0c8b8',
+  '--text-primary': '#1a1814',
+  '--text-secondary': '#7a7060',
+  '--text-muted': '#a09888',
+  '--accent-gold': '#9a7a3a',
+  '--accent-success': '#5a7a5a',
+  '--accent-danger': '#a04040',
+  '--border-primary': '#b8b0a0',
+  '--border-hover': '#9a9078',
+  '--font-display': '"JetBrains Mono", "Courier New", Consolas, monospace',
+  '--font-sans': '"JetBrains Mono", "Courier New", Consolas, monospace',
+  '--font-mono': '"JetBrains Mono", "Courier New", Consolas, monospace',
+} as CSSProperties;
 
 const orbitStyleTokens = {
   '--bg-primary': '#faf7f2',
@@ -52,6 +90,79 @@ const supabaseStyleTokens = {
   '--font-mono': 'JetBrains Mono, "Source Code Pro", Consolas, monospace',
 } as CSSProperties;
 
+const dossierStyleTokens = {
+  '--bg-primary': '#f7f2e8',
+  '--bg-secondary': '#fffaf0',
+  '--bg-tertiary': '#eee5d4',
+  '--text-primary': '#171412',
+  '--text-secondary': '#4f463d',
+  '--text-muted': '#6a6258',
+  '--accent-gold': '#9f2019',
+  '--accent-success': '#1f6f49',
+  '--accent-danger': '#9f2019',
+  '--border-primary': '#8d7d64',
+  '--border-hover': '#9f2019',
+  '--font-display': '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif',
+  '--font-sans': '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif',
+  '--font-mono': '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
+} as CSSProperties;
+
+const isVisualStyle = (value: string | null): value is VisualStyle =>
+  value === 'classic' || value === 'orbit' || value === 'supabase' || value === 'dossier';
+
+const readMobilePreferenceState = (key: string): unknown => {
+  try {
+    const stored = platformStorage.getItem(key);
+    if (stored && typeof (stored as Promise<unknown>).then === 'function') return undefined;
+    return (stored as { state?: unknown } | null)?.state;
+  } catch {
+    return undefined;
+  }
+};
+
+const writeMobilePreferenceState = (key: string, value: string | boolean) => {
+  try {
+    platformStorage.setItem(key, { state: value });
+  } catch {
+    // Android WebView may not expose DOM storage; platform storage failures should not block startup.
+  }
+};
+
+const readStoredMobileVisualStyle = (): VisualStyle => {
+  const value = readMobilePreferenceState(MOBILE_VISUAL_STYLE_KEY);
+  return typeof value === 'string' && isVisualStyle(value) ? value : 'classic';
+};
+
+const readStoredMobileVisualStyleLocal = () => {
+  return readMobilePreferenceState(MOBILE_VISUAL_STYLE_LOCAL_KEY) === true;
+};
+
+const getNextVisualStyle = (style: VisualStyle): VisualStyle => {
+  if (style === 'classic') return 'orbit';
+  if (style === 'orbit') return 'supabase';
+  if (style === 'supabase') return 'dossier';
+  return 'classic';
+};
+
+const getStyleShellClassName = (style: VisualStyle) =>
+  style === 'orbit'
+    ? 'orbit-style-shell'
+    : style === 'supabase'
+      ? 'supabase-style-shell'
+      : style === 'dossier'
+        ? 'dossier-style-shell'
+        : '';
+
+const getVisualStyleLabel = (style: VisualStyle) =>
+  style === 'orbit' ? 'Orbit' : style === 'supabase' ? 'Supabase' : style === 'dossier' ? 'Dossier' : '复古';
+
+const getVisualStyleTokens = (style: VisualStyle, theme: 'dark' | 'light') => {
+  if (style === 'orbit') return orbitStyleTokens;
+  if (style === 'supabase') return supabaseStyleTokens;
+  if (style === 'dossier') return dossierStyleTokens;
+  return theme === 'light' ? classicLightStyleTokens : classicDarkStyleTokens;
+};
+
 const lastWordsMessage =
   systemCopy.lastWords[Math.floor(Math.random() * systemCopy.lastWords.length)] ?? '';
 
@@ -61,6 +172,8 @@ function App() {
   const [page, setPage] = useState<'dashboard' | 'reflection' | 'weeklyReview' | 'monthlyOKR' | 'system'>('dashboard');
   const [weeklyReviewWeekStart, setWeeklyReviewWeekStart] = useState('');
   const [visualStyle, setVisualStyle] = useState<VisualStyle>('classic');
+  const [mobileVisualStyle, setMobileVisualStyle] = useState<VisualStyle>(() => readStoredMobileVisualStyle());
+  const [isMobileVisualStyleLocal, setIsMobileVisualStyleLocal] = useState(() => readStoredMobileVisualStyleLocal());
   const [modulePickerOpen, setModulePickerOpen] = useState(false);
   const [hasUpdate, setHasUpdate] = useState(false);
   const config = useAppStore((s) => s.config);
@@ -117,19 +230,29 @@ function App() {
 
   const isOrbitStyle = visualStyle === 'orbit';
   const isSupabaseStyle = visualStyle === 'supabase';
+  const isDossierStyle = visualStyle === 'dossier';
   const activeStyleTokens =
-    visualStyle === 'orbit'
-      ? orbitStyleTokens
-      : visualStyle === 'supabase'
-        ? supabaseStyleTokens
-        : {};
-  const visualStyleLabel =
-    visualStyle === 'orbit' ? 'Orbit' : visualStyle === 'supabase' ? 'Supabase' : '复古';
+    visualStyle === 'dossier' ? dossierStyleTokens : getVisualStyleTokens(visualStyle, config.theme ?? 'dark');
+  const visualStyleLabel = visualStyle === 'dossier' ? 'Dossier' : getVisualStyleLabel(visualStyle);
+  const effectiveMobileVisualStyle = isMobileVisualStyleLocal ? mobileVisualStyle : visualStyle;
+  const effectiveMobileVisualStyleLabel = getVisualStyleLabel(effectiveMobileVisualStyle);
+  const mobileStyleScopeClassName = `mobile-style-scope ${getStyleShellClassName(effectiveMobileVisualStyle)}`.trim();
+  const mobileStyleTokens = getVisualStyleTokens(effectiveMobileVisualStyle, config.theme ?? 'dark');
   const toggleVisualStyle = () => {
-    setVisualStyle((style) => {
-      if (style === 'classic') return 'orbit';
-      if (style === 'orbit') return 'supabase';
-      return 'classic';
+    setVisualStyle((style) => getNextVisualStyle(style));
+  };
+  const toggleMobileVisualStyle = () => {
+    if (isMobileVisualStyleLocal) {
+      setMobileVisualStyle((style) => getNextVisualStyle(style));
+      return;
+    }
+    toggleVisualStyle();
+  };
+  const toggleMobileVisualStyleLocal = () => {
+    setIsMobileVisualStyleLocal((current) => {
+      const next = !current;
+      if (next) setMobileVisualStyle(visualStyle);
+      return next;
     });
   };
 
@@ -140,9 +263,17 @@ function App() {
     };
   }, [visualStyle]);
 
+  useEffect(() => {
+    writeMobilePreferenceState(MOBILE_VISUAL_STYLE_LOCAL_KEY, isMobileVisualStyleLocal);
+  }, [isMobileVisualStyleLocal]);
+
+  useEffect(() => {
+    writeMobilePreferenceState(MOBILE_VISUAL_STYLE_KEY, mobileVisualStyle);
+  }, [mobileVisualStyle]);
+
   return (
     <div
-      className={`app-shell${isOrbitStyle ? ' orbit-style-shell' : ''}${isSupabaseStyle ? ' supabase-style-shell' : ''}`}
+      className={`app-shell${isOrbitStyle ? ' orbit-style-shell' : ''}${isSupabaseStyle ? ' supabase-style-shell' : ''}${isDossierStyle ? ' dossier-style-shell' : ''}`}
       data-visual-style={visualStyle}
       style={{
         minHeight: '100vh',
@@ -234,10 +365,10 @@ function App() {
                 className="app-rail-button"
                 aria-label={`切换视觉风格，当前：${visualStyleLabel}`}
                 aria-pressed={visualStyle !== 'classic'}
-                title={`当前风格：${visualStyleLabel}。点击切换复古、Orbit、Supabase 风格`}
+                title={`当前风格：${visualStyleLabel}。点击切换复古、Orbit、Supabase、Dossier 风格`}
               >
                 <span className="app-rail-index">
-                  {visualStyle === 'supabase' ? 'S' : visualStyle === 'orbit' ? 'O' : '◇'}
+                  {visualStyle === 'dossier' ? '档' : visualStyle === 'supabase' ? 'S' : visualStyle === 'orbit' ? 'O' : '◇'}
                 </span>
                 <span className="app-rail-label">风格</span>
               </button>
@@ -283,14 +414,18 @@ function App() {
         </div>
       </div>
 
-      <MobileAppShell
-        onOpenModulePicker={() => setModulePickerOpen(true)}
-        onToggleTheme={toggleTheme}
-        onToggleVisualStyle={toggleVisualStyle}
-        theme={config.theme ?? 'dark'}
-        visualStyleLabel={visualStyleLabel}
-        hasUpdate={hasUpdate}
-      />
+      <div className={mobileStyleScopeClassName} style={mobileStyleTokens}>
+        <MobileAppShell
+          onOpenModulePicker={() => setModulePickerOpen(true)}
+          onToggleTheme={toggleTheme}
+          onToggleVisualStyle={toggleMobileVisualStyle}
+          onToggleMobileVisualStyleLocal={toggleMobileVisualStyleLocal}
+          theme={config.theme ?? 'dark'}
+          visualStyleLabel={effectiveMobileVisualStyleLabel}
+          isMobileVisualStyleLocal={isMobileVisualStyleLocal}
+          hasUpdate={hasUpdate}
+        />
+      </div>
 
       <style>{`
         body[data-alo-visual-style="orbit"] {
@@ -301,11 +436,22 @@ function App() {
           background-color: #0f0f0f;
         }
 
+        body[data-alo-visual-style="dossier"] {
+          background:
+            linear-gradient(180deg, #2b2118 0, #2b2118 18px, transparent 18px),
+            repeating-linear-gradient(90deg, rgba(30, 24, 15, 0.035) 0, rgba(30, 24, 15, 0.035) 1px, transparent 1px, transparent 24px),
+            #f7f2e8;
+        }
+
         body[data-alo-visual-style="orbit"]::before {
           opacity: 0;
         }
 
         body[data-alo-visual-style="supabase"]::before {
+          opacity: 0;
+        }
+
+        body[data-alo-visual-style="dossier"]::before {
           opacity: 0;
         }
 
@@ -349,6 +495,29 @@ function App() {
           font-variant-numeric: tabular-nums;
         }
 
+        .dossier-style-shell {
+          --bg-primary: #f7f2e8;
+          --bg-secondary: #fffaf0;
+          --bg-tertiary: #eee5d4;
+          --text-primary: #171412;
+          --text-secondary: #4f463d;
+          --text-muted: #6a6258;
+          --accent-gold: #9f2019;
+          --accent-success: #1f6f49;
+          --accent-danger: #9f2019;
+          --border-primary: #8d7d64;
+          --border-hover: #9f2019;
+          --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+          --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+          --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+          background:
+            linear-gradient(180deg, #2b2118 0, #2b2118 18px, transparent 18px),
+            repeating-linear-gradient(90deg, rgba(30, 24, 15, 0.035) 0, rgba(30, 24, 15, 0.035) 1px, transparent 1px, transparent 24px),
+            var(--bg-primary) !important;
+          color: var(--text-primary) !important;
+          font-variant-numeric: tabular-nums;
+        }
+
         .orbit-style-shell .app-main {
           background: transparent !important;
           padding: var(--space-4) var(--space-5) var(--space-7) !important;
@@ -358,6 +527,13 @@ function App() {
           background:
             radial-gradient(circle at 18% 0%, rgba(62, 207, 142, 0.08), transparent 32%),
             radial-gradient(circle at 82% 10%, rgba(62, 207, 142, 0.05), transparent 28%);
+          padding: var(--space-4) var(--space-5) var(--space-7) !important;
+        }
+
+        .dossier-style-shell .app-main {
+          background:
+            linear-gradient(180deg, rgba(255, 250, 240, 0.28), transparent 180px),
+            repeating-linear-gradient(90deg, rgba(30, 24, 15, 0.03) 0, rgba(30, 24, 15, 0.03) 1px, transparent 1px, transparent 24px);
           padding: var(--space-4) var(--space-5) var(--space-7) !important;
         }
 
@@ -402,6 +578,15 @@ function App() {
           backdrop-filter: saturate(120%) blur(14px);
         }
 
+        .dossier-style-shell .app-rail {
+          padding: 24px 16px !important;
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.46), transparent 180px),
+            rgba(255, 250, 240, 0.92) !important;
+          border-right: 2px solid var(--text-primary) !important;
+          box-shadow: 10px 0 28px rgba(30, 24, 15, 0.08);
+        }
+
         .orbit-style-shell .app-rail-brand {
           color: var(--text-primary) !important;
           font-family: var(--font-display);
@@ -419,6 +604,17 @@ function App() {
           text-transform: none;
         }
 
+        .dossier-style-shell .app-rail-brand {
+          align-items: center;
+          border-bottom: 2px solid var(--text-primary);
+          color: var(--text-primary) !important;
+          font-family: var(--font-display);
+          font-weight: 900;
+          letter-spacing: 0;
+          padding-bottom: 14px;
+          text-transform: none;
+        }
+
         .orbit-style-shell .app-brand-name {
           font-family: var(--font-display);
           font-size: 28px;
@@ -430,6 +626,13 @@ function App() {
           letter-spacing: -0.01em;
         }
 
+        .dossier-style-shell .app-brand-name {
+          font-family: var(--font-display);
+          font-size: 22px;
+          font-weight: 950;
+          letter-spacing: 0;
+        }
+
         .orbit-style-shell .app-brand-slogan {
           font-family: var(--font-sans);
           font-size: 12px;
@@ -439,6 +642,15 @@ function App() {
           color: var(--text-muted);
           font-family: var(--font-sans);
           font-size: 12px;
+        }
+
+        .dossier-style-shell .app-brand-slogan {
+          color: var(--text-muted);
+          font-family: var(--font-sans);
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
         }
 
         .orbit-style-shell .app-rail-button {
@@ -471,6 +683,21 @@ function App() {
           text-transform: none;
         }
 
+        .dossier-style-shell .app-rail-button {
+          min-height: 36px;
+          border: 1px solid transparent !important;
+          border-radius: 0;
+          background: transparent !important;
+          color: var(--text-secondary) !important;
+          font-family: var(--font-sans) !important;
+          font-size: 13px;
+          font-weight: 900;
+          letter-spacing: 0;
+          line-height: 1;
+          padding: 8px 10px !important;
+          text-transform: none;
+        }
+
         .orbit-style-shell .app-rail-button:hover {
           border-color: var(--border-primary) !important;
           background: rgba(255, 255, 255, 0.62) !important;
@@ -480,6 +707,12 @@ function App() {
         .supabase-style-shell .app-rail-button:hover {
           border-color: var(--border-primary) !important;
           background: rgba(62, 207, 142, 0.08) !important;
+          color: var(--text-primary) !important;
+        }
+
+        .dossier-style-shell .app-rail-button:hover {
+          border-color: var(--border-primary) !important;
+          background: rgba(159, 32, 25, 0.06) !important;
           color: var(--text-primary) !important;
         }
 
@@ -496,6 +729,14 @@ function App() {
           background: rgba(62, 207, 142, 0.1) !important;
           color: var(--accent-gold) !important;
           box-shadow: inset 0 0 0 1px rgba(62, 207, 142, 0.08);
+        }
+
+        .dossier-style-shell .app-rail-button[aria-current="page"],
+        .dossier-style-shell .app-rail-button[aria-pressed="true"] {
+          border-color: var(--accent-gold) !important;
+          background: var(--accent-gold) !important;
+          color: var(--bg-secondary) !important;
+          box-shadow: 0 6px 14px rgba(30, 24, 15, 0.12);
         }
 
         .orbit-style-shell .font-display {
@@ -524,11 +765,29 @@ function App() {
           text-transform: none;
         }
 
+        .dossier-style-shell .font-display,
+        .dossier-style-shell .font-h1,
+        .dossier-style-shell .font-h2,
+        .dossier-style-shell .font-h3,
+        .dossier-style-shell .font-body,
+        .dossier-style-shell .font-caption {
+          letter-spacing: 0;
+          text-transform: none;
+        }
+
         .supabase-style-shell .font-display,
         .supabase-style-shell .font-h1,
         .supabase-style-shell .font-h2,
         .supabase-style-shell .font-h3 {
           font-family: var(--font-display);
+        }
+
+        .dossier-style-shell .font-display,
+        .dossier-style-shell .font-h1,
+        .dossier-style-shell .font-h2,
+        .dossier-style-shell .font-h3 {
+          font-family: var(--font-display);
+          font-weight: 900;
         }
 
         .orbit-style-shell .font-body {
@@ -540,6 +799,11 @@ function App() {
           font-size: 14px;
         }
 
+        .dossier-style-shell .font-body {
+          font-family: var(--font-sans);
+          font-size: 14px;
+        }
+
         .orbit-style-shell .font-caption {
           font-size: 12px;
         }
@@ -547,6 +811,13 @@ function App() {
         .supabase-style-shell .font-caption {
           color: var(--text-muted);
           font-size: 12px;
+        }
+
+        .dossier-style-shell .font-caption {
+          color: var(--text-muted);
+          font-family: var(--font-sans);
+          font-size: 12px;
+          font-weight: 800;
         }
 
         .orbit-style-shell .ascii-box {
@@ -565,12 +836,24 @@ function App() {
           box-shadow: none;
         }
 
+        .dossier-style-shell .ascii-box {
+          overflow: hidden;
+          border: 2px solid var(--text-primary);
+          border-radius: 0;
+          background-color: var(--bg-secondary);
+          box-shadow: 0 8px 24px rgba(30, 24, 15, 0.08);
+        }
+
         .orbit-style-shell .ascii-box:hover {
           border-color: rgba(216, 106, 71, 0.5);
         }
 
         .supabase-style-shell .ascii-box:hover {
           border-color: color-mix(in srgb, var(--accent-gold) 48%, var(--border-primary));
+        }
+
+        .dossier-style-shell .ascii-box:hover {
+          border-color: var(--accent-gold);
         }
 
         .orbit-style-shell .ascii-box-title {
@@ -597,6 +880,18 @@ function App() {
           white-space: normal;
         }
 
+        .dossier-style-shell .ascii-box-title {
+          border-bottom: 2px solid var(--text-primary);
+          background: var(--bg-tertiary);
+          color: var(--accent-gold);
+          font-family: var(--font-display);
+          font-size: 16px;
+          font-weight: 950;
+          letter-spacing: 0;
+          text-transform: none;
+          white-space: normal;
+        }
+
         .orbit-style-shell .task-column {
           border: 1px solid var(--border-primary) !important;
           border-radius: 8px;
@@ -611,6 +906,14 @@ function App() {
           overflow: hidden;
         }
 
+        .dossier-style-shell .task-column {
+          border: 2px solid var(--text-primary) !important;
+          border-radius: 0;
+          background-color: var(--bg-secondary) !important;
+          overflow: hidden;
+          box-shadow: 0 8px 24px rgba(30, 24, 15, 0.08);
+        }
+
         .orbit-style-shell .task-column-header {
           background: rgba(250, 247, 242, 0.78) !important;
         }
@@ -620,12 +923,23 @@ function App() {
           color: var(--accent-gold);
         }
 
+        .dossier-style-shell .task-column-header {
+          border-bottom: 2px solid var(--text-primary);
+          background: var(--bg-tertiary) !important;
+          color: var(--accent-gold);
+        }
+
         .orbit-style-shell .task-column-footer {
           background: rgba(250, 247, 242, 0.46);
         }
 
         .supabase-style-shell .task-column-footer {
           background: rgba(32, 32, 32, 0.52);
+        }
+
+        .dossier-style-shell .task-column-footer {
+          background: rgba(238, 229, 212, 0.66);
+          border-top: 1px dashed var(--border-primary);
         }
 
         .orbit-style-shell .task-card {
@@ -640,6 +954,12 @@ function App() {
           border-color: var(--border-primary) !important;
         }
 
+        .dossier-style-shell .task-card {
+          border-radius: 0;
+          background-color: var(--bg-primary) !important;
+          border-color: var(--border-primary) !important;
+        }
+
         .orbit-style-shell .task-card:hover {
           background-color: var(--bg-secondary) !important;
           border-color: rgba(216, 106, 71, 0.5) !important;
@@ -650,11 +970,20 @@ function App() {
           border-color: color-mix(in srgb, var(--accent-gold) 50%, var(--border-primary)) !important;
         }
 
+        .dossier-style-shell .task-card:hover {
+          background-color: var(--bg-secondary) !important;
+          border-color: var(--accent-gold) !important;
+        }
+
         .orbit-style-shell .alo-empty-state-image {
           display: none !important;
         }
 
         .supabase-style-shell .alo-empty-state-image {
+          display: none !important;
+        }
+
+        .dossier-style-shell .alo-empty-state-image {
           display: none !important;
         }
 
@@ -676,6 +1005,15 @@ function App() {
           outline-offset: 3px;
         }
 
+        .dossier-style-shell button:focus-visible,
+        .dossier-style-shell a:focus-visible,
+        .dossier-style-shell input:focus-visible,
+        .dossier-style-shell textarea:focus-visible,
+        .dossier-style-shell select:focus-visible {
+          outline: 3px double rgba(159, 32, 25, 0.72);
+          outline-offset: 3px;
+        }
+
         .orbit-style-shell .btn-invert:hover,
         .orbit-style-shell .btn-invert:focus-visible {
           border-color: var(--accent-gold) !important;
@@ -690,12 +1028,79 @@ function App() {
           color: var(--accent-gold) !important;
         }
 
+        .dossier-style-shell .btn-invert:hover,
+        .dossier-style-shell .btn-invert:focus-visible {
+          border-color: var(--accent-gold) !important;
+          background-color: rgba(159, 32, 25, 0.08) !important;
+          color: var(--accent-gold) !important;
+        }
+
+        .dossier-style-shell .mobile-app-shell {
+          --mobile-radius: 8px;
+          --mobile-surface: rgba(255, 250, 240, 0.92);
+          --mobile-surface-strong: #fffaf0;
+          --mobile-surface-soft: rgba(238, 229, 212, 0.72);
+          --mobile-line: var(--border-primary);
+          --mobile-muted-line: rgba(141, 125, 100, 0.58);
+          background:
+            repeating-linear-gradient(90deg, rgba(30, 24, 15, 0.035) 0, rgba(30, 24, 15, 0.035) 1px, transparent 1px, transparent 24px),
+            var(--bg-primary);
+          color: var(--text-primary);
+        }
+
+        .dossier-style-shell .mobile-daily-command,
+        .dossier-style-shell .mobile-capture-composer,
+        .dossier-style-shell .mobile-week-console,
+        .dossier-style-shell .mobile-system-status,
+        .dossier-style-shell .mobile-system-tools .ascii-box {
+          border: 2px solid var(--text-primary);
+          border-radius: var(--mobile-radius);
+          background: var(--mobile-surface-strong);
+          box-shadow: 0 8px 24px rgba(30, 24, 15, 0.08);
+        }
+
+        .dossier-style-shell .mobile-mood-summary {
+          min-height: 44px;
+        }
+
+        .dossier-style-shell .mobile-bottom-nav {
+          backdrop-filter: none;
+          background: rgba(255, 250, 240, 0.96);
+          border-top: 2px solid var(--text-primary);
+        }
+
+        .dossier-style-shell .mobile-nav-button {
+          border-radius: 0;
+          color: var(--text-secondary);
+          font-weight: 900;
+        }
+
+        .dossier-style-shell .mobile-nav-button[aria-current="page"] {
+          background: var(--accent-gold);
+          border-radius: 0;
+          color: var(--bg-secondary);
+        }
+
+        .dossier-style-shell .mobile-nav-button[aria-current="page"] span {
+          color: var(--bg-secondary);
+        }
+
+        .dossier-style-shell .mobile-system-row {
+          border: 1px solid var(--border-primary);
+          border-radius: 0;
+          background: rgba(255, 250, 240, 0.72);
+        }
+
         @media (max-width: 767px) {
           .orbit-style-shell .app-main {
             padding: 20px 14px 40px !important;
           }
 
           .supabase-style-shell .app-main {
+            padding: 20px 14px 40px !important;
+          }
+
+          .dossier-style-shell .app-main {
             padding: 20px 14px 40px !important;
           }
 
@@ -719,12 +1124,27 @@ function App() {
             gap: 4px;
           }
 
+          .dossier-style-shell .app-rail {
+            height: auto !important;
+            min-height: 60px;
+            padding: 6px 10px !important;
+            flex-wrap: wrap !important;
+            align-items: flex-start !important;
+            justify-content: flex-start !important;
+            gap: 4px;
+          }
+
           .orbit-style-shell .app-rail-brand {
             width: 100%;
             font-size: 22px;
           }
 
           .supabase-style-shell .app-rail-brand {
+            width: 100%;
+            font-size: 20px;
+          }
+
+          .dossier-style-shell .app-rail-brand {
             width: 100%;
             font-size: 20px;
           }
@@ -743,8 +1163,14 @@ function App() {
             padding-bottom: 2px;
           }
 
+          .dossier-style-shell .app-rail-section {
+            width: 100%;
+            padding-bottom: 2px;
+          }
+
           .orbit-style-shell .app-rail-button,
-          .supabase-style-shell .app-rail-button {
+          .supabase-style-shell .app-rail-button,
+          .dossier-style-shell .app-rail-button {
             grid-template-columns: 1fr;
             justify-items: center;
             min-height: 40px;
@@ -752,7 +1178,8 @@ function App() {
           }
 
           .orbit-style-shell .app-rail-section--tools .app-rail-button,
-          .supabase-style-shell .app-rail-section--tools .app-rail-button {
+          .supabase-style-shell .app-rail-section--tools .app-rail-button,
+          .dossier-style-shell .app-rail-section--tools .app-rail-button {
             min-height: 34px;
           }
 
@@ -766,6 +1193,13 @@ function App() {
           .supabase-style-shell .reflection-grid,
           .supabase-style-shell .weekly-review-layout,
           .supabase-style-shell .system-layout {
+            grid-template-columns: 1fr !important;
+            flex-direction: column !important;
+          }
+
+          .dossier-style-shell .reflection-grid,
+          .dossier-style-shell .weekly-review-layout,
+          .dossier-style-shell .system-layout {
             grid-template-columns: 1fr !important;
             flex-direction: column !important;
           }

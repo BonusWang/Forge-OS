@@ -2,35 +2,43 @@ import React, { useMemo, useState } from 'react';
 import AsciiBox from '../../components/AsciiBox';
 import AsciiButton from '../../components/AsciiButton';
 import { useAppStore } from '../../store/useAppStore';
-import type { CosSyncConfig, CosSyncEnvelope, SyncStatus } from '../../types/sync';
-import { createCosSyncClient } from '../../sync/cosSyncClient';
-import { backupObjectKey, syncObjectKey } from '../../sync/cosObjectKeys';
+import type { CosSyncConfig, SyncStatus } from '../../types/sync';
+import { entitySyncObjectKey, syncObjectKey } from '../../sync/cosObjectKeys';
 import {
   createDirectCosCredentialProvider,
   hasDirectCosCredentials,
 } from '../../sync/directCosCredentialProvider';
-import { recommendConflictChoice, type ConflictChoice } from '../../sync/conflictRecommendation';
 import { createHttpCosCredentialProvider } from '../../sync/httpCosCredentialProvider';
-import { resolveSyncConflict, runManualSync, type ManualSyncResult } from '../../sync/manualSync';
+import { isV3SyncEnvelope } from '../../sync/v3/v3SyncEnvelope.ts';
+import { createV3SyncClient } from '../../sync/v3/v3SyncClient.ts';
+import { createV3SyncOwner, v3SyncObjectKey } from '../../sync/v3/v3SyncNamespace.ts';
+import { runV3Sync, type V3SyncResult } from '../../sync/v3/v3SyncRunner.ts';
 import { APP_VERSION } from '../../utils/checkUpdate';
-import { createStorageRecordFromAppState } from '../../utils/storageRecord';
 
-type FirstSyncMode = 'upload-local' | 'restore-remote';
+const createCredentialProvider = (config: CosSyncConfig) =>
+  hasDirectCosCredentials(config)
+    ? createDirectCosCredentialProvider({
+        accessKeyId: config.accessKeyId ?? '',
+        secretAccessKey: config.secretAccessKey ?? '',
+        bucket: config.bucket,
+        region: config.region,
+        endpoint: config.endpoint,
+      })
+    : createHttpCosCredentialProvider({
+        endpoint: config.credentialProviderUrl,
+      });
 
-const createClient = (config: CosSyncConfig) =>
-  createCosSyncClient({
-    credentialProvider: hasDirectCosCredentials(config)
-      ? createDirectCosCredentialProvider({
-          accessKeyId: config.accessKeyId ?? '',
-          secretAccessKey: config.secretAccessKey ?? '',
-          bucket: config.bucket,
-          region: config.region,
-          endpoint: config.endpoint,
-        })
-      : createHttpCosCredentialProvider({
-          endpoint: config.credentialProviderUrl,
-        }),
+const createV3Client = (config: CosSyncConfig) =>
+  createV3SyncClient({
+    credentialProvider: createCredentialProvider(config),
+    appVersion: APP_VERSION,
+    owner: createV3SyncOwner(config),
   });
+
+const legacyObjectKeys = (config: CosSyncConfig) => [
+  syncObjectKey(config),
+  entitySyncObjectKey(config),
+];
 
 const statusLabel: Record<SyncStatus['phase'], string> = {
   'not-configured': '未配置',
@@ -43,6 +51,12 @@ const statusLabel: Record<SyncStatus['phase'], string> = {
 
 const formatSyncError = (error?: string) => {
   if (!error) return undefined;
+  if (error === 'legacy-main-object-present') {
+    return 'V3 初始化已停止：云端仍存在旧 v1/v2 主同步对象，请清理后再初始化。';
+  }
+  if (error === 'namespace-mismatch') {
+    return 'V3 命名空间不匹配，已拒绝导入云端对象，避免写入其他用户或资料的数据。';
+  }
   if (/浏览器无法访问 COS/i.test(error)) {
     return error;
   }
@@ -59,18 +73,14 @@ const SyncPanel: React.FC = () => {
   const setSyncStatus = useAppStore((state) => state.setSyncStatus);
   const [form, setForm] = useState(syncConfig);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
-  const [firstSyncMode, setFirstSyncMode] = useState<FirstSyncMode>('upload-local');
-  const [pendingRemoteEnvelope, setPendingRemoteEnvelope] = useState<CosSyncEnvelope | null>(null);
 
-  const recommendation = useMemo(
-    () =>
-      recommendConflictChoice(
-        syncStatus.conflict?.localUpdatedAt,
-        syncStatus.conflict?.remoteUpdatedAt
-      ),
-    [syncStatus.conflict?.localUpdatedAt, syncStatus.conflict?.remoteUpdatedAt]
-  );
   const displayError = formatSyncError(syncStatus.lastError);
+  const v3Namespace = useMemo(
+    () => syncStatus.v3SyncNamespace ?? createV3SyncOwner(syncConfig).namespace,
+    [syncConfig, syncStatus.v3SyncNamespace]
+  );
+  const v3ObjectKey = useMemo(() => v3SyncObjectKey(syncConfig), [syncConfig]);
+  const hasActiveV3SyncStatus = Boolean(syncStatus.v3SyncRevision || syncStatus.v3SyncInitializedAt);
 
   const updateForm = (field: keyof CosSyncConfig, value: string | boolean) => {
     setForm((current) => ({
@@ -79,16 +89,9 @@ const SyncPanel: React.FC = () => {
     }));
   };
 
-  const applyResult = (result: ManualSyncResult, config: CosSyncConfig = form) => {
-    const deviceId = syncStatus.deviceId;
-
-    if (result.phase === 'idle') {
-      setSyncStatus({
-        phase: 'idle',
-        lastError: '首次同步需要手动选择上传本地或采用云端',
-      });
-      return;
-    }
+  const applyV3Result = (result: V3SyncResult, config: CosSyncConfig = form) => {
+    const state = useAppStore.getState();
+    const deviceId = state.syncStatus.deviceId;
 
     if (result.phase === 'not-configured') {
       setSyncStatus({ phase: 'not-configured', lastError: '请先启用并保存 COS 同步配置' });
@@ -96,53 +99,49 @@ const SyncPanel: React.FC = () => {
     }
 
     if (result.phase === 'error') {
-      setSyncStatus({ phase: 'error', lastError: result.error });
-      return;
-    }
-
-    if (result.phase === 'conflict') {
-      if ('remoteEnvelope' in result && result.remoteEnvelope) {
-        setPendingRemoteEnvelope(result.remoteEnvelope);
-      }
-      if ('localRevision' in result) {
-        setSyncStatus({
-          phase: 'conflict',
-          lastError: '检测到本地和云端同时变化',
-          conflict: {
-            localRevision: result.localRevision,
-            remoteRevision: result.remoteRevision,
-            localUpdatedAt: result.localUpdatedAt,
-            remoteUpdatedAt: result.remoteUpdatedAt,
-            backupKey: result.backupKey,
-          },
-        });
-      }
-      return;
-    }
-
-    if (result.state) {
-      useAppStore.setState({
-        ...result.state,
-        syncConfig: config,
-        syncStatus: {
-          phase: 'success',
-          deviceId,
-          lastSyncedAt: new Date().toISOString(),
-          lastSyncedRevision: result.revision,
-          lastLocalUpdatedAt: undefined,
-        },
+      setSyncStatus({
+        phase: 'error',
+        lastError: result.error,
+        v3SyncLastError: result.error,
       });
       return;
     }
 
-    setPendingRemoteEnvelope(null);
-    setSyncStatus({
-      phase: 'success',
-      lastSyncedAt: new Date().toISOString(),
-      lastSyncedRevision: result.revision,
-      lastLocalUpdatedAt: undefined,
-      lastError: undefined,
-      conflict: undefined,
+    if (result.phase === 'conflict') {
+      setSyncStatus({
+        phase: 'conflict',
+        lastError: `V3 同步检测到 ${result.conflicts.length} 个字段冲突`,
+        conflict: undefined,
+        v3SyncRevision: result.revision,
+        v3SyncBase: result.baseEnvelope,
+        v3SyncNamespace: result.baseEnvelope.owner.namespace,
+        v3SyncAutoMerged: result.autoMerged,
+        v3SyncConflicts: result.conflicts.length,
+        v3SyncLastError: undefined,
+      });
+      return;
+    }
+
+    useAppStore.setState({
+      ...result.state,
+      syncConfig: config,
+      syncStatus: {
+        ...state.syncStatus,
+        phase: 'success',
+        deviceId,
+        lastSyncedAt: new Date().toISOString(),
+        lastLocalUpdatedAt: undefined,
+        lastError: undefined,
+        conflict: undefined,
+        v3SyncRevision: result.revision,
+        v3SyncBase: result.baseEnvelope,
+        v3SyncNamespace: result.baseEnvelope.owner.namespace,
+        v3SyncInitializedAt:
+          state.syncStatus.v3SyncInitializedAt ?? result.baseEnvelope.updatedAt,
+        v3SyncAutoMerged: result.autoMerged,
+        v3SyncConflicts: result.conflicts.length,
+        v3SyncLastError: undefined,
+      },
     });
   };
 
@@ -167,49 +166,21 @@ const SyncPanel: React.FC = () => {
     setSyncStatus({ phase: 'syncing', lastError: undefined });
 
     const state = useAppStore.getState();
-    const client = createClient(activeConfig);
-    const result = await runManualSync({
+    const result = await runV3Sync({
       config: activeConfig,
-      client,
-      key: syncObjectKey(activeConfig),
-      backupKey: backupObjectKey(activeConfig, syncStatus.deviceId),
+      client: createV3Client(activeConfig),
+      key: v3SyncObjectKey(activeConfig),
+      legacyObjectKeys: legacyObjectKeys(activeConfig),
       appVersion: APP_VERSION,
-      deviceId: syncStatus.deviceId,
-      storageRecord: createStorageRecordFromAppState(state),
-      lastSyncedRevision: syncStatus.lastSyncedRevision,
+      deviceId: state.syncStatus.deviceId,
+      state,
+      baseEnvelope: isV3SyncEnvelope(state.syncStatus.v3SyncBase)
+        ? state.syncStatus.v3SyncBase
+        : undefined,
       hasLocalChanges: Boolean(syncStatus.lastLocalUpdatedAt),
-      localUpdatedAt: syncStatus.lastLocalUpdatedAt,
-      firstSyncMode,
     });
 
-    applyResult(result, activeConfig);
-  };
-
-  const handleConflictChoice = async (choice: ConflictChoice) => {
-    if (choice === 'later') {
-      setSyncStatus({ phase: 'conflict', lastError: '冲突已保留，稍后处理' });
-      return;
-    }
-
-    if (!pendingRemoteEnvelope) {
-      setSyncStatus({ phase: 'error', lastError: '缺少云端冲突快照，请重新同步' });
-      return;
-    }
-
-    setSyncStatus({ phase: 'syncing', lastError: undefined });
-    const state = useAppStore.getState();
-    const activeConfig = isConfigOpen ? form : syncConfig;
-    const result = await resolveSyncConflict({
-      choice,
-      client: createClient(activeConfig),
-      key: syncObjectKey(activeConfig),
-      appVersion: APP_VERSION,
-      deviceId: syncStatus.deviceId,
-      storageRecord: createStorageRecordFromAppState(state),
-      remoteEnvelope: pendingRemoteEnvelope,
-    });
-
-    applyResult(result, activeConfig);
+    applyV3Result(result, activeConfig);
   };
 
   return (
@@ -222,16 +193,32 @@ const SyncPanel: React.FC = () => {
           </div>
           <div className="sync-status-meta font-caption">
             <span>最近同步：{syncStatus.lastSyncedAt ?? '暂无'}</span>
-            <span>基线：{syncStatus.lastSyncedRevision ?? '暂无'}</span>
+            {!hasActiveV3SyncStatus && (
+              <span>基线：{syncStatus.lastSyncedRevision ?? '暂无'}</span>
+            )}
+            <span>V3 基线：{syncStatus.v3SyncRevision ?? '暂无'}</span>
+            <span>V3 初始化：{syncStatus.v3SyncInitializedAt ?? '暂无'}</span>
+            <span>V3 合并：{syncStatus.v3SyncAutoMerged ?? 0}</span>
+            <span>V3 冲突：{syncStatus.v3SyncConflicts ?? 0}</span>
             <span>待上传本地变更：{syncStatus.lastLocalUpdatedAt ?? '无'}</span>
+            <span>V3 命名空间：{v3Namespace}</span>
           </div>
           {displayError && <div className="font-caption sync-error">{displayError}</div>}
         </div>
+
+        {hasActiveV3SyncStatus && syncStatus.lastSyncedRevision && (
+          <details className="sync-legacy-diagnostics font-caption">
+            <summary>旧版诊断</summary>
+            <span>旧版基线：{syncStatus.lastSyncedRevision}</span>
+            <span>日常同步使用当前 V3 对象；旧版基线仅作诊断参考。</span>
+          </details>
+        )}
 
         {!isConfigOpen && (
           <div className="sync-config-summary font-caption">
             <span>Bucket：{syncConfig.bucket}</span>
             <span>对象前缀：{syncConfig.objectPrefix}</span>
+            <span>V3 对象：{v3ObjectKey}</span>
             <span>授权：{hasDirectCosCredentials(syncConfig) ? '手动密钥' : '签名服务'}</span>
           </div>
         )}
@@ -318,24 +305,6 @@ const SyncPanel: React.FC = () => {
                 />
               </label>
             </div>
-
-            <div className="sync-setting-section sync-setting-section--behavior">
-              <div className="sync-section-heading">
-                <div className="font-body">同步行为</div>
-                <div className="font-caption">首次同步时选择本机数据或云端快照作为基线。</div>
-              </div>
-
-              <label className="sync-field font-caption">
-                <span className="sync-field-label">首次同步</span>
-                <select
-                  value={firstSyncMode}
-                  onChange={(event) => setFirstSyncMode(event.target.value as FirstSyncMode)}
-                >
-                  <option value="upload-local">上传本地</option>
-                  <option value="restore-remote">采用云端</option>
-                </select>
-              </label>
-            </div>
           </>
         )}
 
@@ -357,18 +326,7 @@ const SyncPanel: React.FC = () => {
         {syncStatus.phase === 'conflict' && (
           <div className="sync-conflict">
             <div className="font-caption text-gold">
-              推荐：{recommendation === 'keep-local' ? '保留本地' : recommendation === 'use-remote' ? '采用云端' : '手动判断'}
-            </div>
-            <div className="sync-actions sync-conflict-actions">
-              <AsciiButton onClick={() => handleConflictChoice('keep-local')}>
-                保留本地
-              </AsciiButton>
-              <AsciiButton onClick={() => handleConflictChoice('use-remote')} variant="secondary">
-                采用云端
-              </AsciiButton>
-              <AsciiButton onClick={() => handleConflictChoice('later')} variant="secondary">
-                稍后处理
-              </AsciiButton>
+              V3 同步发现字段冲突：{syncStatus.v3SyncConflicts ?? 0} 个。冲突值已保留在 V3 同步元数据中，本地数据不会被云端覆盖。
             </div>
           </div>
         )}

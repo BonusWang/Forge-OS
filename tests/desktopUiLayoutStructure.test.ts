@@ -17,6 +17,23 @@ test('desktop navigation separates monthly OKR and bottom system entry', () => {
   assert.match(app, /app-rail-icon/);
 });
 
+test('dossier visual style joins the existing style cycle without adding pages', () => {
+  const app = read('src/App.tsx');
+
+  assert.match(app, /type VisualStyle = 'classic' \| 'orbit' \| 'supabase' \| 'dossier'/);
+  assert.match(app, /const dossierStyleTokens =/);
+  assert.match(app, /const isDossierStyle = visualStyle === 'dossier'/);
+  assert.match(app, /visualStyle === 'dossier'\s*\?\s*dossierStyleTokens/);
+  assert.match(app, /visualStyle === 'dossier' \? 'Dossier'/);
+  assert.match(app, /if \(style === 'supabase'\) return 'dossier'/);
+  assert.match(app, /return 'classic'/);
+  assert.match(app, /dossier-style-shell/);
+  assert.match(app, /body\[data-alo-visual-style="dossier"\]/);
+  assert.match(app, /当前风格：\$\{visualStyleLabel\}。点击切换复古、Orbit、Supabase、Dossier 风格/);
+  assert.match(app, /visualStyle === 'dossier' \? '档'/);
+  assert.doesNotMatch(app, /setPage\('dossier'\)/);
+});
+
 test('reflection library does not render the monthly OKR panel', () => {
   const reflectionPage = read('src/pages/Reflection.tsx');
   const monthlyOkrPage = read('src/pages/MonthlyOKR.tsx');

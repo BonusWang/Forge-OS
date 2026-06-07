@@ -10,8 +10,10 @@ interface MobileAppShellProps {
   onOpenModulePicker: () => void;
   onToggleTheme: () => void;
   onToggleVisualStyle: () => void;
+  onToggleMobileVisualStyleLocal: () => void;
   theme: 'dark' | 'light';
   visualStyleLabel: string;
+  isMobileVisualStyleLocal: boolean;
   hasUpdate: boolean;
 }
 
@@ -47,8 +49,10 @@ const MobileAppShell: React.FC<MobileAppShellProps> = ({
   onOpenModulePicker,
   onToggleTheme,
   onToggleVisualStyle,
+  onToggleMobileVisualStyleLocal,
   theme,
   visualStyleLabel,
+  isMobileVisualStyleLocal,
   hasUpdate,
 }) => {
   const [activeSection, setActiveSection] = useState<MobileSection>(() => getSectionFromLocation());
@@ -108,7 +112,20 @@ const MobileAppShell: React.FC<MobileAppShellProps> = ({
           <button type="button" className="mobile-system-row" onClick={onToggleVisualStyle}>
             <span>风格</span>
             <strong>{visualStyleLabel}</strong>
-            <small>同步桌面视觉模式</small>
+            <small>{isMobileVisualStyleLocal ? '仅当前手机' : '跟随桌面'}</small>
+          </button>
+          <button
+            type="button"
+            className="mobile-system-row mobile-system-row--toggle"
+            aria-pressed={isMobileVisualStyleLocal}
+            onClick={onToggleMobileVisualStyleLocal}
+          >
+            <span>本机</span>
+            <strong>本机独立风格</strong>
+            <small>{isMobileVisualStyleLocal ? '当前手机固定风格，不影响桌面' : '跟随桌面，切换会同步桌面视觉'}</small>
+            <span className="mobile-local-style-switch" aria-hidden="true">
+              <span />
+            </span>
           </button>
           <button
             type="button"

@@ -146,9 +146,12 @@ const MobileCaptureHub: React.FC = () => {
       };
     });
 
-  const recentMobileCaptures = [...mobileInspirationCaptures, ...mobileReflectionCaptures]
+  const recentInspirations = mobileInspirationCaptures
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 6);
+    .slice(0, 4);
+  const recentReflections = mobileReflectionCaptures
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 3);
   const controlQuestion = reflectionTemplate?.questions.find((question) => question.id === 'q-control' || question.label.includes('掌控'));
   const controlDisplay = todayReflection && controlQuestion && todayReflection.answers[controlQuestion.id]
     ? `${todayReflection.answers[controlQuestion.id]}/10`
@@ -160,6 +163,11 @@ const MobileCaptureHub: React.FC = () => {
     requiredReflectionFields.every((question) => String(reflectionAnswers[question.id] ?? '').trim().length > 0);
   const isQuickComposerOpen = isComposerOpen && mode === 'inspiration';
   const isStructuredComposerOpen = isComposerOpen && mode === 'reflection';
+  const hasUnsavedInspirationDraft =
+    content.trim().length > 0 || sourceInput.trim().length > 0 || tagInput.trim().length > 0;
+  const hasUnsavedReflectionDraft =
+    isStructuredComposerOpen &&
+    Object.values(reflectionAnswers).some((value) => String(value ?? '').trim().length > 0);
 
   const openComposer = (nextMode: CaptureMode) => {
     setMode(nextMode);
@@ -173,13 +181,33 @@ const MobileCaptureHub: React.FC = () => {
     setIsComposerOpen(true);
   };
 
+  const requestCloseComposer = () => {
+    const hasDraft = isQuickComposerOpen
+      ? hasUnsavedInspirationDraft
+      : hasUnsavedReflectionDraft;
+    if (hasDraft && !window.confirm('当前内容还没保存，确认收起吗？')) {
+      return;
+    }
+    setIsComposerOpen(false);
+    setIsEditingReflection(false);
+    setInspirationCaptureStep('content');
+  };
+
+  const toggleComposer = (nextMode: CaptureMode) => {
+    if (isComposerOpen && mode === nextMode) {
+      requestCloseComposer();
+      return;
+    }
+    openComposer(nextMode);
+  };
+
   const closeComposerAfterSave = (savedId: string, label: string) => {
     setIsComposerOpen(false);
     setIsEditingReflection(false);
     setInspirationCaptureStep('content');
     setMode('inspiration');
     setLatestSavedId(savedId);
-    setSavedFlash(`${label}已保存到记录流`);
+    setSavedFlash(`${label}已保存到${modeDestinations[mode]}`);
     window.setTimeout(() => {
       setSavedFlash('');
       setLatestSavedId('');
@@ -223,17 +251,91 @@ const MobileCaptureHub: React.FC = () => {
     saveReflectionCapture();
   };
 
-  const renderInspirationStepper = () => (
-    <div className="mobile-capture-stepper" aria-label="灵感记录步骤">
-      {inspirationCaptureSteps.map((step, index) => (
-        <span
-          key={step}
-          className={step === inspirationCaptureStep ? 'is-active' : ''}
-        >
-          <strong>{String(index + 1).padStart(2, '0')}</strong>
-          {inspirationCaptureStepLabels[step]}
-        </span>
-      ))}
+  const getInspirationStepSummary = (step: InspirationCaptureStep) => {
+    if (step === 'content') return content.trim() || '写下核心想法';
+    if (step === 'source') return sourceInput.trim() || '来源可以跳过';
+    if (step === 'tags') return parseCaptureTags(tagInput).join('、') || '标签可以跳过';
+    return canSaveCapture ? '检查后保存到灵感库' : '先完成想法';
+  };
+
+  const renderInspirationStepper = () => {
+    const activeIndex = inspirationCaptureSteps.indexOf(inspirationCaptureStep);
+
+    return (
+      <div className="mobile-capture-node-list" aria-label="灵感记录步骤">
+        {inspirationCaptureSteps.map((step, index) => {
+          const isActive = step === inspirationCaptureStep;
+          const isComplete = index < activeIndex;
+          const isPending = index > activeIndex;
+          return (
+            <button
+              type="button"
+              key={step}
+              className={`mobile-capture-node${isActive ? ' is-active' : ''}${isComplete ? ' is-complete' : ''}${isPending ? ' is-pending' : ''}`}
+              onClick={() => {
+                if (!isPending) setInspirationCaptureStep(step);
+              }}
+              disabled={isPending}
+            >
+              <span className="mobile-capture-node-index">{String(index + 1).padStart(2, '0')}</span>
+              <strong>{inspirationCaptureStepLabels[step]}</strong>
+              <small className="mobile-capture-node-summary">{getInspirationStepSummary(step)}</small>
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderHistoryItem = (item: MobileCaptureHistoryItem) => {
+    const visibleTags = item.tags.filter((tag) => !mobileSystemTags.has(tag));
+    return (
+      <article
+        className={`mobile-capture-history-item${item.id === latestSavedId ? ' is-new' : ''}`}
+        key={item.id}
+      >
+        <div className="mobile-capture-history-meta">
+          <span>{modeLabels[item.kind]} · {item.destination}</span>
+          <time dateTime={item.createdAt}>
+            {formatLocalDateTime(item.createdAt)}
+          </time>
+        </div>
+        <p>{item.content}</p>
+        {(item.source || visibleTags.length > 0) && (
+          <div className="mobile-capture-history-extra">
+            {item.source && <span className="mobile-capture-history-source">来源：{item.source}</span>}
+            {visibleTags.length > 0 && (
+              <div className="mobile-capture-history-tags">
+                {visibleTags.map((tag) => (
+                  <span key={tag}>#{tag}</span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </article>
+    );
+  };
+
+  const renderRecentList = (
+    className: string,
+    title: string,
+    items: MobileCaptureHistoryItem[],
+    emptyText: string
+  ) => (
+    <div className={`mobile-capture-history ${className}`} aria-label={title}>
+      <div className="mobile-section-heading">
+        <div>
+          <span>最近保存</span>
+          <h2>{title}</h2>
+        </div>
+        <span>{items.length}</span>
+      </div>
+      {items.length === 0 ? (
+        <div className="mobile-empty-state">{emptyText}</div>
+      ) : (
+        items.map(renderHistoryItem)
+      )}
     </div>
   );
 
@@ -385,7 +487,7 @@ const MobileCaptureHub: React.FC = () => {
                 disabled={!canSaveCapture}
                 onClick={saveCapture}
               >
-                保存到记录流
+                保存到灵感库
               </button>
             </div>
           </div>
@@ -483,15 +585,30 @@ const MobileCaptureHub: React.FC = () => {
             <button
               type="button"
               className="mobile-capture-trigger"
-              onClick={() => openComposer('inspiration')}
+              onClick={() => toggleComposer('inspiration')}
             >
               写一条灵感
             </button>
           )}
           {isQuickComposerOpen && (
+            <button
+              type="button"
+              className="mobile-capture-trigger is-active"
+              onClick={() => toggleComposer('inspiration')}
+            >
+              {isQuickComposerOpen ? '收起灵感' : '写一条灵感'}
+            </button>
+          )}
+          {isQuickComposerOpen && (
             renderInspirationWorkflow()
           )}
-          {savedFlash && <div className="mobile-save-flash">{savedFlash}</div>}
+          {savedFlash.startsWith(modeLabels.inspiration) && <div className="mobile-save-flash">{savedFlash}</div>}
+          {renderRecentList(
+            'mobile-recent-inspirations',
+            '最近灵感',
+            recentInspirations,
+            '保存灵感后会在这里看到最近灵感。'
+          )}
         </div>
       </section>
 
@@ -508,9 +625,9 @@ const MobileCaptureHub: React.FC = () => {
             type="button"
             className={isStructuredComposerOpen ? 'is-active' : ''}
             aria-expanded={isStructuredComposerOpen}
-            onClick={() => openComposer('reflection')}
+            onClick={() => toggleComposer('reflection')}
           >
-            <strong>写一条反思</strong>
+            <strong>{isStructuredComposerOpen ? '收起反思' : '写一条反思'}</strong>
             <small>{modeDescriptions.reflection}</small>
           </button>
         </div>
@@ -546,49 +663,13 @@ const MobileCaptureHub: React.FC = () => {
             )}
           </div>
         )}
-      </section>
-
-      <section className="mobile-capture-history" aria-label="最近保存的记录">
-        <div className="mobile-section-heading">
-          <div>
-            <span>记录流</span>
-            <h2>最近保存</h2>
-          </div>
-          <span>{recentMobileCaptures.length}</span>
-        </div>
-        {recentMobileCaptures.length === 0 ? (
-          <div className="mobile-empty-state">保存后会在这里看到最近记录。</div>
-        ) : (
-          recentMobileCaptures.map((item) => {
-            const visibleTags = item.tags.filter((tag) => !mobileSystemTags.has(tag));
-            return (
-              <article
-                className={`mobile-capture-history-item${item.id === latestSavedId ? ' is-new' : ''}`}
-                key={item.id}
-              >
-                <div className="mobile-capture-history-meta">
-                  <span>{modeLabels[item.kind]} · {item.destination}</span>
-                  <time dateTime={item.createdAt}>
-                    {formatLocalDateTime(item.createdAt)}
-                  </time>
-                </div>
-                <p>{item.content}</p>
-                {(item.source || visibleTags.length > 0) && (
-                  <div className="mobile-capture-history-extra">
-                    {item.source && <span className="mobile-capture-history-source">来源：{item.source}</span>}
-                    {visibleTags.length > 0 && (
-                      <div className="mobile-capture-history-tags">
-                        {visibleTags.map((tag) => (
-                          <span key={tag}>#{tag}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </article>
-            );
-          })
+        {renderRecentList(
+          'mobile-recent-reflections',
+          '最近反思',
+          recentReflections,
+          '保存反思后会在这里看到最近反思。'
         )}
+        {savedFlash.startsWith(modeLabels.reflection) && <div className="mobile-save-flash">{savedFlash}</div>}
       </section>
     </div>
   );

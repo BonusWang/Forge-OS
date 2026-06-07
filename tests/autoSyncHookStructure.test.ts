@@ -25,12 +25,17 @@ test('auto COS sync uploads queued local changes after a baseline exists', () =>
   assert.match(hook, /lastAttemptedLocalUpdatedAtRef/);
   assert.match(hook, /phase === 'syncing'/);
   assert.match(hook, /phase === 'conflict'/);
-  assert.match(hook, /runManualSync/);
-  assert.match(hook, /createStorageRecordFromAppState\(useAppStore\.getState\(\)\)/);
+  assert.match(hook, /runV3Sync/);
+  assert.match(hook, /createV3SyncClient/);
+  assert.match(hook, /v3SyncObjectKey/);
+  assert.match(hook, /v3SyncRevision/);
+  assert.match(hook, /v3SyncBase/);
+  assert.match(hook, /legacyObjectKeys/);
   assert.match(hook, /hasLocalChanges:\s*true/);
-  assert.match(hook, /localUpdatedAt:\s*syncStatus\.lastLocalUpdatedAt/);
   assert.match(hook, /lastLocalUpdatedAt:\s*undefined/);
-  assert.match(hook, /if \(!syncConfig\.enabled \|\| !syncStatus\.lastLocalUpdatedAt \|\| !syncStatus\.lastSyncedRevision\) return/);
+  assert.match(hook, /!syncStatus\.v3SyncRevision && !syncStatus\.lastSyncedRevision/);
+  assert.doesNotMatch(hook, /runEntitySync/);
+  assert.doesNotMatch(hook, /runManualSync/);
 });
 
 test('auto COS sync checks the cloud for remote updates when the app is open', () => {
